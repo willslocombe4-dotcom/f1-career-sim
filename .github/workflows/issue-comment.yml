@@ -34,9 +34,9 @@ jobs:
         with:
           bot-app-id: ${{ secrets.BOT_APP_ID }}
           bot-private-key: ${{ secrets.BOT_PRIVATE_KEY }}
-          opencode-api-key: ${{ secrets.OPENCODE_API_KEY }}
-          opencode-model: ${{ secrets.OPENCODE_MODEL }}
-          opencode-fast-model: ${{ secrets.OPENCODE_FAST_MODEL }}
+          opencode-api-key: ${{ secrets.API }}
+          opencode-model: ${{ secrets.MODEL }}
+          opencode-fast-model: ${{ secrets.FAST_MODEL }}
           custom-providers-json: ${{ secrets.CUSTOM_PROVIDERS_JSON }}
 
       - name: Add reaction to issue
