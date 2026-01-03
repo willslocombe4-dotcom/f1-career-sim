@@ -108,6 +108,13 @@ runs:
             # CASE 1: Provider and model both exist. Use it as is.
             # echo "Model '$model_name' also found. Setting '${config_key}' to '${model_string}'."
             CONFIG=$(jq --arg key "$config_key" --arg val "$model_string" '.[$key] = $val' <<< "$CONFIG")
+            
+            # Also set the API key for custom providers if not already set
+            echo "Setting default API key for custom provider."
+            CONFIG=$(jq \
+              --arg provider "$provider" \
+              --arg apiKey "$DEFAULT_API_KEY" \
+              '.provider[$provider].options.apiKey = $apiKey' <<< "$CONFIG")
 
           else
             # CASE 3: Provider does not exist in custom definitions. Treat as a standard provider.
