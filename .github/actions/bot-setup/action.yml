@@ -62,16 +62,20 @@ runs:
         FAST_MODEL="${{ inputs.opencode-fast-model }}"
         DEFAULT_API_KEY="${{ inputs.opencode-api-key }}"
 
-        # Use command substitution with a heredoc to safely read the input into a variable.
-        # This is robust against complex characters and avoids creating a giant line of code that can break shell parsers.
-        CUSTOM_PROVIDERS=$(cat <<'EOF'
-        ${{ inputs.custom-providers-json }}
-        EOF
-        )
-
-        # If the input was empty (or just whitespace), the variable will be empty. Set a default.
+        # Read custom providers JSON directly (compact, no newlines expected)
+        CUSTOM_PROVIDERS='${{ inputs.custom-providers-json }}'
+        
+        # If empty, set default
         if [ -z "$CUSTOM_PROVIDERS" ]; then
           CUSTOM_PROVIDERS='{}'
+        else
+          # Validate and compact JSON (removes extra whitespace while preserving structure)
+          if VALIDATED=$(echo "$CUSTOM_PROVIDERS" | jq -c . 2>/dev/null); then
+            CUSTOM_PROVIDERS="$VALIDATED"
+          else
+            echo "::warning::CUSTOM_PROVIDERS_JSON is not valid JSON, ignoring it"
+            CUSTOM_PROVIDERS='{}'
+          fi
         fi
 
         # --- INITIAL CONFIG SETUP ---
