@@ -1,0 +1,42 @@
+{
+  "id": "porto-azzurro",
+  "name": "Porto Azzurro Street Circuit",
+  "country": "Italy",
+  "lengthMeters": 3340,
+  "raceLaps": 78,
+  "trackWidth": 55,
+  "characteristics": "Tight street circuit with narrow sections, barriers close to track, minimal runoff. Inspired by Monaco - precision and concentration required.",
+  "averageLapTime": 75,
+  "startFinish": {
+    "controlPointIndex": 0
+  },
+  "controlPoints": [
+    { "x": 0, "y": 0, "width": 65, "drs": true, "sector": 1, "name": "Start/Finish Straight" },
+    { "x": 180, "y": 0, "width": 65, "sector": 1 },
+    { "x": 240, "y": 30, "kerbs": true, "runoff": "barrier", "sector": 1, "name": "Sainte Devote" },
+    { "x": 260, "y": 80, "runoff": "barrier", "sector": 1 },
+    { "x": 280, "y": 180, "runoff": "barrier", "sector": 1, "name": "Beau Rivage" },
+    { "x": 260, "y": 280, "kerbs": true, "runoff": "barrier", "sector": 1, "name": "Massenet" },
+    { "x": 200, "y": 320, "runoff": "barrier", "sector": 1 },
+    { "x": 140, "y": 340, "kerbs": true, "runoff": "barrier", "sector": 1, "name": "Casino" },
+    { "x": 80, "y": 320, "runoff": "barrier", "sector": 2 },
+    { "x": 40, "y": 280, "kerbs": true, "runoff": "barrier", "sector": 2, "name": "Mirabeau" },
+    { "x": 20, "y": 230, "runoff": "barrier", "sector": 2 },
+    { "x": 40, "y": 180, "kerbs": true, "runoff": "barrier", "sector": 2, "name": "Hairpin" },
+    { "x": 80, "y": 160, "runoff": "barrier", "sector": 2 },
+    { "x": 140, "y": 180, "kerbs": true, "runoff": "barrier", "sector": 2, "name": "Portier" },
+    { "x": 200, "y": 160, "runoff": "barrier", "sector": 2, "name": "Tunnel Entry" },
+    { "x": 320, "y": 140, "runoff": "barrier", "sector": 2, "name": "Tunnel" },
+    { "x": 400, "y": 160, "runoff": "barrier", "sector": 2 },
+    { "x": 440, "y": 120, "kerbs": true, "runoff": "tarmac", "sector": 2, "name": "Nouvelle Chicane" },
+    { "x": 420, "y": 60, "kerbs": true, "runoff": "tarmac", "sector": 2 },
+    { "x": 380, "y": 40, "runoff": "barrier", "sector": 3, "name": "Tabac" },
+    { "x": 340, "y": 0, "kerbs": true, "runoff": "barrier", "sector": 3 },
+    { "x": 380, "y": -60, "kerbs": true, "runoff": "barrier", "sector": 3, "name": "Piscine" },
+    { "x": 340, "y": -100, "kerbs": true, "runoff": "barrier", "sector": 3 },
+    { "x": 280, "y": -80, "runoff": "barrier", "sector": 3 },
+    { "x": 220, "y": -100, "kerbs": true, "runoff": "barrier", "sector": 3, "name": "La Rascasse" },
+    { "x": 160, "y": -60, "kerbs": true, "runoff": "barrier", "sector": 3, "name": "Anthony Noghes" },
+    { "x": 80, "y": -40, "runoff": "barrier", "sector": 3 }
+  ]
+}

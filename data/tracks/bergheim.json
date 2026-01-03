@@ -1,0 +1,40 @@
+{
+  "id": "bergheim",
+  "name": "Bergheim Ring",
+  "country": "Austria",
+  "lengthMeters": 6840,
+  "raceLaps": 44,
+  "trackWidth": 60,
+  "characteristics": "Technical circuit with flowing corners through forested hills. Inspired by Spa and Suzuka - elevation changes, flowing esses, and demanding for driver and car.",
+  "averageLapTime": 105,
+  "startFinish": {
+    "controlPointIndex": 0
+  },
+  "controlPoints": [
+    { "x": 0, "y": 0, "width": 70, "drs": true, "sector": 1, "name": "Start/Finish" },
+    { "x": 200, "y": 0, "drs": true, "sector": 1 },
+    { "x": 380, "y": 30, "kerbs": true, "runoff": "tarmac", "sector": 1, "name": "La Source" },
+    { "x": 440, "y": 120, "runoff": "gravel", "sector": 1 },
+    { "x": 420, "y": 240, "kerbs": true, "runoff": "gravel", "sector": 1, "name": "Eau Rouge" },
+    { "x": 460, "y": 360, "kerbs": true, "runoff": "gravel", "sector": 1, "name": "Raidillon" },
+    { "x": 540, "y": 480, "drs": true, "sector": 1 },
+    { "x": 660, "y": 560, "drs": true, "sector": 1, "name": "Kemmel" },
+    { "x": 780, "y": 580, "kerbs": true, "runoff": "tarmac", "sector": 1, "name": "Les Combes" },
+    { "x": 860, "y": 520, "kerbs": true, "runoff": "tarmac", "sector": 2 },
+    { "x": 880, "y": 420, "runoff": "gravel", "sector": 2 },
+    { "x": 840, "y": 320, "kerbs": true, "runoff": "gravel", "sector": 2, "name": "Rivage" },
+    { "x": 760, "y": 260, "runoff": "gravel", "sector": 2 },
+    { "x": 660, "y": 240, "kerbs": true, "runoff": "gravel", "sector": 2, "name": "Pouhon" },
+    { "x": 560, "y": 280, "runoff": "gravel", "sector": 2 },
+    { "x": 480, "y": 360, "kerbs": true, "runoff": "tarmac", "sector": 2, "name": "Fagnes" },
+    { "x": 420, "y": 460, "runoff": "gravel", "sector": 2 },
+    { "x": 340, "y": 540, "kerbs": true, "runoff": "gravel", "sector": 3, "name": "Stavelot" },
+    { "x": 240, "y": 580, "runoff": "gravel", "sector": 3 },
+    { "x": 120, "y": 560, "kerbs": true, "runoff": "gravel", "sector": 3, "name": "Blanchimont" },
+    { "x": 40, "y": 480, "runoff": "gravel", "sector": 3 },
+    { "x": -20, "y": 380, "kerbs": true, "runoff": "tarmac", "sector": 3, "name": "Bus Stop" },
+    { "x": 20, "y": 280, "kerbs": true, "runoff": "tarmac", "sector": 3 },
+    { "x": -20, "y": 180, "runoff": "gravel", "sector": 3 },
+    { "x": -40, "y": 80, "sector": 3 }
+  ]
+}

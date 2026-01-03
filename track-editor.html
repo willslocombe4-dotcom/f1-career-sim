@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>F1 Track Editor</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    header {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    header h1 {
+      font-size: 1.5rem;
+      color: #e94560;
+    }
+    
+    header a {
+      color: #4da6ff;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    
+    header a:hover {
+      text-decoration: underline;
+    }
+    
+    .main-container {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+    
+    .sidebar {
+      width: 320px;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 20px;
+      overflow-y: auto;
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .sidebar h2 {
+      font-size: 1.1rem;
+      margin-bottom: 15px;
+      color: #e94560;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 10px;
+    }
+    
+    .control-group {
+      margin-bottom: 20px;
+    }
+    
+    .control-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 0.9rem;
+      color: #aaa;
+    }
+    
+    .control-group input[type="text"],
+    .control-group input[type="number"] {
+      width: 100%;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 5px;
+      color: #fff;
+      font-size: 1rem;
+    }
+    
+    .control-group input:focus {
+      outline: none;
+      border-color: #e94560;
+    }
+    
+    .slider-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .slider-group input[type="range"] {
+      flex: 1;
+      accent-color: #e94560;
+    }
+    
+    .slider-group .value {
+      min-width: 40px;
+      text-align: right;
+      font-weight: bold;
+      color: #e94560;
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    
+    .btn-primary {
+      background: #e94560;
+      color: #fff;
+    }
+    
+    .btn-primary:hover {
+      background: #ff6b8a;
+    }
+    
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    
+    .btn-danger {
+      background: #ff4444;
+      color: #fff;
+    }
+    
+    .btn-danger:hover {
+      background: #ff6666;
+    }
+    
+    .instructions {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 20px;
+    }
+    
+    .instructions h3 {
+      font-size: 0.95rem;
+      margin-bottom: 10px;
+      color: #4da6ff;
+    }
+    
+    .instructions ul {
+      list-style: none;
+      font-size: 0.85rem;
+      line-height: 1.8;
+    }
+    
+    .instructions li {
+      padding-left: 15px;
+      position: relative;
+    }
+    
+    .instructions li::before {
+      content: '>';
+      position: absolute;
+      left: 0;
+      color: #e94560;
+    }
+    
+    .canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      position: relative;
+    }
+    
+    #trackCanvas {
+      background: #1a1a2e;
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      cursor: crosshair;
+    }
+    
+    .stats {
+      position: absolute;
+      top: 30px;
+      left: 30px;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 15px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+    }
+    
+    .stats div {
+      margin-bottom: 5px;
+    }
+    
+    .stats span {
+      color: #e94560;
+      font-weight: bold;
+    }
+    
+    .point-list {
+      max-height: 200px;
+      overflow-y: auto;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 5px;
+      padding: 10px;
+      margin-top: 10px;
+    }
+    
+    .point-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 0.8rem;
+    }
+    
+    .point-item:last-child {
+      border-bottom: none;
+    }
+    
+    .point-item .coords {
+      color: #aaa;
+    }
+    
+    .point-item.selected {
+      background: rgba(233, 69, 96, 0.3);
+      border-radius: 3px;
+    }
+    
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    
+    .checkbox-group input[type="checkbox"] {
+      accent-color: #e94560;
+      width: 18px;
+      height: 18px;
+    }
+    
+    .zoom-controls {
+      position: absolute;
+      bottom: 30px;
+      right: 30px;
+      display: flex;
+      gap: 5px;
+    }
+    
+    .zoom-controls button {
+      width: 40px;
+      height: 40px;
+      font-size: 1.2rem;
+      padding: 0;
+    }
+    
+    .tooltip {
+      position: absolute;
+      background: rgba(0, 0, 0, 0.9);
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      pointer-events: none;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>F1 Track Editor</h1>
+    <a href="index.html">Back to Game</a>
+    <span style="color: #666; font-size: 0.9rem;">| Design your own circuits</span>
+  </header>
+  
+  <div class="main-container">
+    <div class="sidebar">
+      <h2>Track Settings</h2>
+      
+      <div class="control-group">
+        <label for="trackName">Track Name</label>
+        <input type="text" id="trackName" value="Custom Circuit" placeholder="Enter track name">
+      </div>
+      
+      <div class="control-group">
+        <label for="trackCountry">Country</label>
+        <input type="text" id="trackCountry" value="Custom" placeholder="Enter country">
+      </div>
+      
+      <div class="control-group">
+        <label>Track Width: <span id="widthValue">60</span></label>
+        <div class="slider-group">
+          <input type="range" id="trackWidth" min="40" max="100" value="60">
+        </div>
+      </div>
+      
+      <div class="control-group">
+        <label for="raceLaps">Race Laps</label>
+        <input type="number" id="raceLaps" value="50" min="1" max="100">
+      </div>
+      
+      <h2>Reference Image</h2>
+      
+      <div class="control-group">
+        <label>Load a track image to trace over</label>
+        <div class="button-group">
+          <button class="btn-secondary" id="loadImageBtn">Load Image</button>
+          <button class="btn-secondary" id="clearImageBtn">Clear Image</button>
+        </div>
+        <input type="file" id="imageFile" accept="image/*" style="display: none;">
+      </div>
+      
+      <div class="control-group" id="imageControls" style="display: none;">
+        <label>Image Opacity: <span id="opacityValue">50</span>%</label>
+        <div class="slider-group">
+          <input type="range" id="imageOpacity" min="10" max="100" value="50">
+        </div>
+        
+        <label>Image Scale: <span id="scaleValue">100</span>%</label>
+        <div class="slider-group">
+          <input type="range" id="imageScale" min="10" max="300" value="100">
+        </div>
+        
+        <div class="checkbox-group">
+          <input type="checkbox" id="showImage" checked>
+          <label for="showImage">Show Reference Image</label>
+        </div>
+        
+        <p style="font-size: 0.8rem; color: #888; margin-top: 10px;">
+          Tip: Drag with Shift+Left Click to move the image
+        </p>
+      </div>
+      
+      <h2>Display Options</h2>
+      
+      <div class="checkbox-group">
+        <input type="checkbox" id="showGrid" checked>
+        <label for="showGrid">Show Grid</label>
+      </div>
+      
+      <div class="checkbox-group">
+        <input type="checkbox" id="showNumbers" checked>
+        <label for="showNumbers">Show Point Numbers</label>
+      </div>
+      
+      <div class="checkbox-group">
+        <input type="checkbox" id="showTrackWidth" checked>
+        <label for="showTrackWidth">Show Track Width</label>
+      </div>
+      
+      <h2>Actions</h2>
+      
+      <div class="button-group">
+        <button class="btn-primary" id="exportBtn">Export JSON</button>
+        <button class="btn-secondary" id="importBtn">Import JSON</button>
+      </div>
+      
+      <div class="button-group" style="margin-top: 10px;">
+        <button class="btn-secondary" id="centerBtn">Center View</button>
+        <button class="btn-danger" id="clearBtn">Clear All</button>
+      </div>
+      
+      <input type="file" id="importFile" accept=".json" style="display: none;">
+      
+      <h2>Control Points</h2>
+      <div class="point-list" id="pointList">
+        <div style="color: #666; text-align: center; padding: 20px;">
+          Click on canvas to add points
+        </div>
+      </div>
+      
+      <div class="instructions">
+        <h3>How to Use</h3>
+        <ul>
+          <li><strong>Left Click</strong> - Add control point</li>
+          <li><strong>Drag Point</strong> - Move control point</li>
+          <li><strong>Right Click</strong> - Delete point</li>
+          <li><strong>Mouse Wheel</strong> - Zoom in/out</li>
+          <li><strong>Middle Click + Drag</strong> - Pan view</li>
+          <li><strong>Shift + Drag</strong> - Move reference image</li>
+          <li>Need at least 3 points for a track</li>
+          <li>Track automatically forms a closed loop</li>
+        </ul>
+        <h3 style="margin-top: 15px;">Tracing Real Tracks</h3>
+        <ul>
+          <li>Load a track map image</li>
+          <li>Adjust opacity & scale to fit</li>
+          <li>Shift+drag to position image</li>
+          <li>Click around the racing line to trace</li>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="canvas-container">
+      <canvas id="trackCanvas" width="1200" height="800"></canvas>
+      
+      <div class="stats">
+        <div>Points: <span id="pointCount">0</span></div>
+        <div>Est. Length: <span id="trackLength">0</span>m</div>
+        <div>Zoom: <span id="zoomLevel">100</span>%</div>
+      </div>
+      
+      <div class="zoom-controls">
+        <button class="btn-secondary" id="zoomIn">+</button>
+        <button class="btn-secondary" id="zoomOut">-</button>
+        <button class="btn-secondary" id="zoomFit">Fit</button>
+      </div>
+      
+      <div class="tooltip" id="tooltip"></div>
+    </div>
+  </div>
+  
+  <script>
+    // ============================================
+    // F1 TRACK EDITOR - Self-contained JavaScript
+    // ============================================
+    
+    // Canvas and context
+    const canvas = document.getElementById('trackCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Editor state
+    const state = {
+      controlPoints: [],
+      selectedPoint: null,
+      draggingPoint: null,
+      isPanning: false,
+      panStart: { x: 0, y: 0 },
+      
+      // View transform
+      zoom: 1,
+      panX: 0,
+      panY: 0,
+      
+      // Display options
+      showGrid: true,
+      showNumbers: true,
+      showTrackWidth: true,
+      
+      // Track settings
+      trackWidth: 60,
+      
+      // Reference image
+      referenceImage: null,
+      imageOpacity: 0.5,
+      imageScale: 1,
+      imageOffsetX: 0,
+      imageOffsetY: 0,
+      showImage: true,
+      isDraggingImage: false,
+    };
+    
+    // Colors
+    const COLORS = {
+      background: '#1a1a2e',
+      grid: '#2a2a4e',
+      gridMajor: '#3a3a5e',
+      track: '#3a3a3a',
+      trackBorder: '#555555',
+      centerLine: '#666666',
+      controlPoint: '#e94560',
+      controlPointHover: '#ff6b8a',
+      controlPointSelected: '#4da6ff',
+      spline: '#4da6ff',
+      text: '#ffffff',
+    };
+    
+    // ============================================
+    // CATMULL-ROM SPLINE (same as TrackBuilder.ts)
+    // ============================================
+    
+    function catmullRom(p0, p1, p2, p3, t) {
+      const t2 = t * t;
+      const t3 = t2 * t;
+      
+      const x = 0.5 * (
+        (2 * p1.x) +
+        (-p0.x + p2.x) * t +
+        (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 +
+        (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3
+      );
+      
+      const y = 0.5 * (
+        (2 * p1.y) +
+        (-p0.y + p2.y) * t +
+        (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 +
+        (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3
+      );
+      
+      return { x, y };
+    }
+    
+    function catmullRomTangent(p0, p1, p2, p3, t) {
+      const t2 = t * t;
+      
+      const x = 0.5 * (
+        (-p0.x + p2.x) +
+        (4 * p0.x - 10 * p1.x + 8 * p2.x - 2 * p3.x) * t +
+        (-3 * p0.x + 9 * p1.x - 9 * p2.x + 3 * p3.x) * t2
+      );
+      
+      const y = 0.5 * (
+        (-p0.y + p2.y) +
+        (4 * p0.y - 10 * p1.y + 8 * p2.y - 2 * p3.y) * t +
+        (-3 * p0.y + 9 * p1.y - 9 * p2.y + 3 * p3.y) * t2
+      );
+      
+      return { x, y };
+    }
+    
+    // Generate spline points from control points
+    function generateSpline(controlPoints, pointsPerSegment = 20) {
+      if (controlPoints.length < 3) return [];
+      
+      const splinePoints = [];
+      const n = controlPoints.length;
+      
+      for (let i = 0; i < n; i++) {
+        const p0 = controlPoints[(i - 1 + n) % n];
+        const p1 = controlPoints[i];
+        const p2 = controlPoints[(i + 1) % n];
+        const p3 = controlPoints[(i + 2) % n];
+        
+        for (let j = 0; j < pointsPerSegment; j++) {
+          const t = j / pointsPerSegment;
+          const pos = catmullRom(p0, p1, p2, p3, t);
+          const tangent = catmullRomTangent(p0, p1, p2, p3, t);
+          const angle = Math.atan2(tangent.y, tangent.x);
+          
+          splinePoints.push({
+            x: pos.x,
+            y: pos.y,
+            angle: angle
+          });
+        }
+      }
+      
+      return splinePoints;
+    }
+    
+    // Calculate track boundaries from spline
+    function calculateBoundaries(splinePoints, trackWidth) {
+      const outer = [];
+      const inner = [];
+      const halfWidth = trackWidth / 2;
+      
+      for (const point of splinePoints) {
+        const perpAngle = point.angle + Math.PI / 2;
+        
+        outer.push({
+          x: point.x + Math.cos(perpAngle) * halfWidth,
+          y: point.y + Math.sin(perpAngle) * halfWidth
+        });
+        
+        inner.push({
+          x: point.x - Math.cos(perpAngle) * halfWidth,
+          y: point.y - Math.sin(perpAngle) * halfWidth
+        });
+      }
+      
+      return { outer, inner };
+    }
+    
+    // Calculate total track length
+    function calculateTrackLength(splinePoints) {
+      if (splinePoints.length < 2) return 0;
+      
+      let length = 0;
+      for (let i = 0; i < splinePoints.length; i++) {
+        const curr = splinePoints[i];
+        const next = splinePoints[(i + 1) % splinePoints.length];
+        const dx = next.x - curr.x;
+        const dy = next.y - curr.y;
+        length += Math.sqrt(dx * dx + dy * dy);
+      }
+      
+      // Convert to approximate meters (scale factor)
+      return Math.round(length * 10);
+    }
+    
+    // ============================================
+    // COORDINATE TRANSFORMATIONS
+    // ============================================
+    
+    function worldToScreen(worldX, worldY) {
+      const screenX = (worldX - state.panX) * state.zoom + canvas.width / 2;
+      const screenY = (worldY - state.panY) * state.zoom + canvas.height / 2;
+      return { x: screenX, y: screenY };
+    }
+    
+    function screenToWorld(screenX, screenY) {
+      const worldX = (screenX - canvas.width / 2) / state.zoom + state.panX;
+      const worldY = (screenY - canvas.height / 2) / state.zoom + state.panY;
+      return { x: worldX, y: worldY };
+    }
+    
+    // ============================================
+    // RENDERING
+    // ============================================
+    
+    function render() {
+      // Clear canvas
+      ctx.fillStyle = COLORS.background;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw reference image (behind everything)
+      if (state.referenceImage && state.showImage) {
+        drawReferenceImage();
+      }
+      
+      // Draw grid
+      if (state.showGrid) {
+        drawGrid();
+      }
+      
+      // Draw track
+      if (state.controlPoints.length >= 3) {
+        const splinePoints = generateSpline(state.controlPoints);
+        
+        if (state.showTrackWidth) {
+          drawTrackSurface(splinePoints);
+        }
+        
+        // Draw centerline spline
+        drawSpline(splinePoints);
+      }
+      
+      // Draw control points
+      drawControlPoints();
+      
+      // Draw connections between adjacent control points (for reference)
+      if (state.controlPoints.length >= 2) {
+        drawControlPolygon();
+      }
+      
+      // Update stats
+      updateStats();
+    }
+    
+    function drawReferenceImage() {
+      if (!state.referenceImage) return;
+      
+      const img = state.referenceImage;
+      const scale = state.imageScale;
+      const width = img.width * scale;
+      const height = img.height * scale;
+      
+      // Calculate screen position (image is centered at its offset position)
+      const screenPos = worldToScreen(state.imageOffsetX, state.imageOffsetY);
+      
+      ctx.save();
+      ctx.globalAlpha = state.imageOpacity;
+      ctx.drawImage(
+        img,
+        screenPos.x - (width * state.zoom) / 2,
+        screenPos.y - (height * state.zoom) / 2,
+        width * state.zoom,
+        height * state.zoom
+      );
+      ctx.restore();
+    }
+    
+    function drawGrid() {
+      const gridSize = 50;
+      const majorGridSize = 200;
+      
+      // Calculate visible area in world coords
+      const topLeft = screenToWorld(0, 0);
+      const bottomRight = screenToWorld(canvas.width, canvas.height);
+      
+      const startX = Math.floor(topLeft.x / gridSize) * gridSize;
+      const startY = Math.floor(topLeft.y / gridSize) * gridSize;
+      const endX = Math.ceil(bottomRight.x / gridSize) * gridSize;
+      const endY = Math.ceil(bottomRight.y / gridSize) * gridSize;
+      
+      ctx.lineWidth = 1;
+      
+      // Minor grid
+      ctx.strokeStyle = COLORS.grid;
+      ctx.beginPath();
+      for (let x = startX; x <= endX; x += gridSize) {
+        if (x % majorGridSize !== 0) {
+          const screen = worldToScreen(x, 0);
+          ctx.moveTo(screen.x, 0);
+          ctx.lineTo(screen.x, canvas.height);
+        }
+      }
+      for (let y = startY; y <= endY; y += gridSize) {
+        if (y % majorGridSize !== 0) {
+          const screen = worldToScreen(0, y);
+          ctx.moveTo(0, screen.y);
+          ctx.lineTo(canvas.width, screen.y);
+        }
+      }
+      ctx.stroke();
+      
+      // Major grid
+      ctx.strokeStyle = COLORS.gridMajor;
+      ctx.beginPath();
+      for (let x = startX; x <= endX; x += majorGridSize) {
+        const screen = worldToScreen(x, 0);
+        ctx.moveTo(screen.x, 0);
+        ctx.lineTo(screen.x, canvas.height);
+      }
+      for (let y = startY; y <= endY; y += majorGridSize) {
+        const screen = worldToScreen(0, y);
+        ctx.moveTo(0, screen.y);
+        ctx.lineTo(canvas.width, screen.y);
+      }
+      ctx.stroke();
+      
+      // Origin marker
+      const origin = worldToScreen(0, 0);
+      ctx.fillStyle = '#e94560';
+      ctx.beginPath();
+      ctx.arc(origin.x, origin.y, 5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    
+    function drawTrackSurface(splinePoints) {
+      if (splinePoints.length < 2) return;
+      
+      const boundaries = calculateBoundaries(splinePoints, state.trackWidth);
+      
+      // Draw track surface as filled polygon
+      ctx.fillStyle = COLORS.track;
+      ctx.beginPath();
+      
+      // Outer edge
+      for (let i = 0; i < boundaries.outer.length; i++) {
+        const screen = worldToScreen(boundaries.outer[i].x, boundaries.outer[i].y);
+        if (i === 0) {
+          ctx.moveTo(screen.x, screen.y);
+        } else {
+          ctx.lineTo(screen.x, screen.y);
+        }
+      }
+      
+      // Close outer and go to inner (reversed)
+      for (let i = boundaries.inner.length - 1; i >= 0; i--) {
+        const screen = worldToScreen(boundaries.inner[i].x, boundaries.inner[i].y);
+        ctx.lineTo(screen.x, screen.y);
+      }
+      
+      ctx.closePath();
+      ctx.fill();
+      
+      // Draw track borders
+      ctx.strokeStyle = COLORS.trackBorder;
+      ctx.lineWidth = 2;
+      
+      // Outer border
+      ctx.beginPath();
+      for (let i = 0; i <= boundaries.outer.length; i++) {
+        const idx = i % boundaries.outer.length;
+        const screen = worldToScreen(boundaries.outer[idx].x, boundaries.outer[idx].y);
+        if (i === 0) {
+          ctx.moveTo(screen.x, screen.y);
+        } else {
+          ctx.lineTo(screen.x, screen.y);
+        }
+      }
+      ctx.stroke();
+      
+      // Inner border
+      ctx.beginPath();
+      for (let i = 0; i <= boundaries.inner.length; i++) {
+        const idx = i % boundaries.inner.length;
+        const screen = worldToScreen(boundaries.inner[idx].x, boundaries.inner[idx].y);
+        if (i === 0) {
+          ctx.moveTo(screen.x, screen.y);
+        } else {
+          ctx.lineTo(screen.x, screen.y);
+        }
+      }
+      ctx.stroke();
+    }
+    
+    function drawSpline(splinePoints) {
+      if (splinePoints.length < 2) return;
+      
+      ctx.strokeStyle = COLORS.centerLine;
+      ctx.lineWidth = 1;
+      ctx.setLineDash([5, 5]);
+      
+      ctx.beginPath();
+      for (let i = 0; i <= splinePoints.length; i++) {
+        const idx = i % splinePoints.length;
+        const screen = worldToScreen(splinePoints[idx].x, splinePoints[idx].y);
+        if (i === 0) {
+          ctx.moveTo(screen.x, screen.y);
+        } else {
+          ctx.lineTo(screen.x, screen.y);
+        }
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    
+    function drawControlPolygon() {
+      ctx.strokeStyle = 'rgba(77, 166, 255, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      
+      ctx.beginPath();
+      for (let i = 0; i <= state.controlPoints.length; i++) {
+        const idx = i % state.controlPoints.length;
+        const screen = worldToScreen(state.controlPoints[idx].x, state.controlPoints[idx].y);
+        if (i === 0) {
+          ctx.moveTo(screen.x, screen.y);
+        } else {
+          ctx.lineTo(screen.x, screen.y);
+        }
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    
+    function drawControlPoints() {
+      for (let i = 0; i < state.controlPoints.length; i++) {
+        const point = state.controlPoints[i];
+        const screen = worldToScreen(point.x, point.y);
+        
+        // Determine color
+        let color = COLORS.controlPoint;
+        let radius = 8;
+        
+        if (state.selectedPoint === i) {
+          color = COLORS.controlPointSelected;
+          radius = 10;
+        } else if (state.draggingPoint === i) {
+          color = COLORS.controlPointHover;
+          radius = 10;
+        }
+        
+        // Draw point
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(screen.x, screen.y, radius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Draw border
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        // Draw number
+        if (state.showNumbers) {
+          ctx.fillStyle = '#fff';
+          ctx.font = 'bold 12px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(String(i), screen.x, screen.y);
+        }
+        
+        // Start/Finish marker for point 0
+        if (i === 0) {
+          ctx.fillStyle = '#4da6ff';
+          ctx.font = '10px sans-serif';
+          ctx.fillText('START', screen.x, screen.y - 18);
+        }
+      }
+    }
+    
+    function updateStats() {
+      document.getElementById('pointCount').textContent = state.controlPoints.length;
+      document.getElementById('zoomLevel').textContent = Math.round(state.zoom * 100);
+      
+      if (state.controlPoints.length >= 3) {
+        const splinePoints = generateSpline(state.controlPoints);
+        const length = calculateTrackLength(splinePoints);
+        document.getElementById('trackLength').textContent = length.toLocaleString();
+      } else {
+        document.getElementById('trackLength').textContent = '0';
+      }
+      
+      // Update point list
+      updatePointList();
+    }
+    
+    function updatePointList() {
+      const listEl = document.getElementById('pointList');
+      
+      if (state.controlPoints.length === 0) {
+        listEl.innerHTML = '<div style="color: #666; text-align: center; padding: 20px;">Click on canvas to add points</div>';
+        return;
+      }
+      
+      let html = '';
+      for (let i = 0; i < state.controlPoints.length; i++) {
+        const point = state.controlPoints[i];
+        const isSelected = state.selectedPoint === i;
+        html += `
+          <div class="point-item ${isSelected ? 'selected' : ''}" data-index="${i}">
+            <span>Point ${i}${i === 0 ? ' (Start)' : ''}</span>
+            <span class="coords">(${Math.round(point.x)}, ${Math.round(point.y)})</span>
+          </div>
+        `;
+      }
+      listEl.innerHTML = html;
+    }
+    
+    // ============================================
+    // INPUT HANDLING
+    // ============================================
+    
+    function getMousePos(e) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      };
+    }
+    
+    function findPointAtPosition(screenX, screenY, threshold = 15) {
+      for (let i = 0; i < state.controlPoints.length; i++) {
+        const screen = worldToScreen(state.controlPoints[i].x, state.controlPoints[i].y);
+        const dx = screenX - screen.x;
+        const dy = screenY - screen.y;
+        if (Math.sqrt(dx * dx + dy * dy) < threshold) {
+          return i;
+        }
+      }
+      return -1;
+    }
+    
+    canvas.addEventListener('mousedown', (e) => {
+      const pos = getMousePos(e);
+      
+      if (e.button === 1) {
+        // Middle click - start panning
+        state.isPanning = true;
+        state.panStart = pos;
+        canvas.style.cursor = 'grabbing';
+        return;
+      }
+      
+      if (e.button === 2) {
+        // Right click - delete point
+        const pointIndex = findPointAtPosition(pos.x, pos.y);
+        if (pointIndex >= 0) {
+          state.controlPoints.splice(pointIndex, 1);
+          if (state.selectedPoint === pointIndex) {
+            state.selectedPoint = null;
+          } else if (state.selectedPoint > pointIndex) {
+            state.selectedPoint--;
+          }
+          render();
+        }
+        return;
+      }
+      
+      if (e.button === 0) {
+        // Shift + Left click - drag reference image
+        if (e.shiftKey && state.referenceImage) {
+          state.isDraggingImage = true;
+          state.panStart = pos;
+          canvas.style.cursor = 'move';
+          return;
+        }
+        
+        // Left click
+        const pointIndex = findPointAtPosition(pos.x, pos.y);
+        
+        if (pointIndex >= 0) {
+          // Start dragging existing point
+          state.draggingPoint = pointIndex;
+          state.selectedPoint = pointIndex;
+          canvas.style.cursor = 'grabbing';
+        } else {
+          // Add new point
+          const world = screenToWorld(pos.x, pos.y);
+          state.controlPoints.push({ x: world.x, y: world.y });
+          state.selectedPoint = state.controlPoints.length - 1;
+        }
+        render();
+      }
+    });
+    
+    canvas.addEventListener('mousemove', (e) => {
+      const pos = getMousePos(e);
+      
+      if (state.isPanning) {
+        const dx = (pos.x - state.panStart.x) / state.zoom;
+        const dy = (pos.y - state.panStart.y) / state.zoom;
+        state.panX -= dx;
+        state.panY -= dy;
+        state.panStart = pos;
+        render();
+        return;
+      }
+      
+      if (state.isDraggingImage) {
+        const dx = (pos.x - state.panStart.x) / state.zoom;
+        const dy = (pos.y - state.panStart.y) / state.zoom;
+        state.imageOffsetX += dx;
+        state.imageOffsetY += dy;
+        state.panStart = pos;
+        render();
+        return;
+      }
+      
+      if (state.draggingPoint !== null) {
+        const world = screenToWorld(pos.x, pos.y);
+        state.controlPoints[state.draggingPoint].x = world.x;
+        state.controlPoints[state.draggingPoint].y = world.y;
+        render();
+        return;
+      }
+      
+      // Update cursor
+      const pointIndex = findPointAtPosition(pos.x, pos.y);
+      if (e.shiftKey && state.referenceImage) {
+        canvas.style.cursor = 'move';
+      } else {
+        canvas.style.cursor = pointIndex >= 0 ? 'pointer' : 'crosshair';
+      }
+      
+      // Update tooltip
+      const world = screenToWorld(pos.x, pos.y);
+      const tooltip = document.getElementById('tooltip');
+      tooltip.style.display = 'block';
+      tooltip.style.left = (e.clientX + 15) + 'px';
+      tooltip.style.top = (e.clientY + 15) + 'px';
+      tooltip.textContent = `(${Math.round(world.x)}, ${Math.round(world.y)})`;
+    });
+    
+    canvas.addEventListener('mouseup', (e) => {
+      state.draggingPoint = null;
+      state.isPanning = false;
+      state.isDraggingImage = false;
+      canvas.style.cursor = 'crosshair';
+    });
+    
+    canvas.addEventListener('mouseleave', () => {
+      document.getElementById('tooltip').style.display = 'none';
+      state.draggingPoint = null;
+      state.isPanning = false;
+      state.isDraggingImage = false;
+    });
+    
+    canvas.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      
+      const pos = getMousePos(e);
+      const worldBefore = screenToWorld(pos.x, pos.y);
+      
+      // Zoom
+      const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+      state.zoom = Math.max(0.1, Math.min(5, state.zoom * zoomFactor));
+      
+      // Adjust pan to zoom towards mouse
+      const worldAfter = screenToWorld(pos.x, pos.y);
+      state.panX += worldBefore.x - worldAfter.x;
+      state.panY += worldBefore.y - worldAfter.y;
+      
+      render();
+    });
+    
+    canvas.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+    });
+    
+    // ============================================
+    // UI CONTROLS
+    // ============================================
+    
+    // Reference image controls
+    document.getElementById('loadImageBtn').addEventListener('click', () => {
+      document.getElementById('imageFile').click();
+    });
+    
+    document.getElementById('imageFile').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          state.referenceImage = img;
+          state.imageOffsetX = 0;
+          state.imageOffsetY = 0;
+          document.getElementById('imageControls').style.display = 'block';
+          render();
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+      e.target.value = '';
+    });
+    
+    document.getElementById('clearImageBtn').addEventListener('click', () => {
+      state.referenceImage = null;
+      document.getElementById('imageControls').style.display = 'none';
+      render();
+    });
+    
+    document.getElementById('imageOpacity').addEventListener('input', (e) => {
+      state.imageOpacity = parseInt(e.target.value) / 100;
+      document.getElementById('opacityValue').textContent = e.target.value;
+      render();
+    });
+    
+    document.getElementById('imageScale').addEventListener('input', (e) => {
+      state.imageScale = parseInt(e.target.value) / 100;
+      document.getElementById('scaleValue').textContent = e.target.value;
+      render();
+    });
+    
+    document.getElementById('showImage').addEventListener('change', (e) => {
+      state.showImage = e.target.checked;
+      render();
+    });
+    
+    document.getElementById('trackWidth').addEventListener('input', (e) => {
+      state.trackWidth = parseInt(e.target.value);
+      document.getElementById('widthValue').textContent = state.trackWidth;
+      render();
+    });
+    
+    document.getElementById('showGrid').addEventListener('change', (e) => {
+      state.showGrid = e.target.checked;
+      render();
+    });
+    
+    document.getElementById('showNumbers').addEventListener('change', (e) => {
+      state.showNumbers = e.target.checked;
+      render();
+    });
+    
+    document.getElementById('showTrackWidth').addEventListener('change', (e) => {
+      state.showTrackWidth = e.target.checked;
+      render();
+    });
+    
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      if (confirm('Clear all control points?')) {
+        state.controlPoints = [];
+        state.selectedPoint = null;
+        render();
+      }
+    });
+    
+    document.getElementById('centerBtn').addEventListener('click', () => {
+      if (state.controlPoints.length === 0) {
+        state.panX = 0;
+        state.panY = 0;
+      } else {
+        // Center on track
+        let minX = Infinity, maxX = -Infinity;
+        let minY = Infinity, maxY = -Infinity;
+        
+        for (const p of state.controlPoints) {
+          minX = Math.min(minX, p.x);
+          maxX = Math.max(maxX, p.x);
+          minY = Math.min(minY, p.y);
+          maxY = Math.max(maxY, p.y);
+        }
+        
+        state.panX = (minX + maxX) / 2;
+        state.panY = (minY + maxY) / 2;
+      }
+      render();
+    });
+    
+    document.getElementById('zoomIn').addEventListener('click', () => {
+      state.zoom = Math.min(5, state.zoom * 1.2);
+      render();
+    });
+    
+    document.getElementById('zoomOut').addEventListener('click', () => {
+      state.zoom = Math.max(0.1, state.zoom / 1.2);
+      render();
+    });
+    
+    document.getElementById('zoomFit').addEventListener('click', () => {
+      if (state.controlPoints.length === 0) {
+        state.zoom = 1;
+        state.panX = 0;
+        state.panY = 0;
+      } else {
+        // Calculate bounds
+        let minX = Infinity, maxX = -Infinity;
+        let minY = Infinity, maxY = -Infinity;
+        
+        for (const p of state.controlPoints) {
+          minX = Math.min(minX, p.x);
+          maxX = Math.max(maxX, p.x);
+          minY = Math.min(minY, p.y);
+          maxY = Math.max(maxY, p.y);
+        }
+        
+        // Add padding
+        const padding = state.trackWidth * 2;
+        minX -= padding;
+        maxX += padding;
+        minY -= padding;
+        maxY += padding;
+        
+        const width = maxX - minX;
+        const height = maxY - minY;
+        
+        // Calculate zoom to fit
+        const zoomX = canvas.width / width;
+        const zoomY = canvas.height / height;
+        state.zoom = Math.min(zoomX, zoomY) * 0.9;
+        
+        // Center
+        state.panX = (minX + maxX) / 2;
+        state.panY = (minY + maxY) / 2;
+      }
+      render();
+    });
+    
+    // Point list click handling
+    document.getElementById('pointList').addEventListener('click', (e) => {
+      const item = e.target.closest('.point-item');
+      if (item) {
+        state.selectedPoint = parseInt(item.dataset.index);
+        render();
+      }
+    });
+    
+    // ============================================
+    // EXPORT/IMPORT
+    // ============================================
+    
+    document.getElementById('exportBtn').addEventListener('click', () => {
+      if (state.controlPoints.length < 3) {
+        alert('Need at least 3 control points to export a track!');
+        return;
+      }
+      
+      const trackName = document.getElementById('trackName').value || 'Custom Circuit';
+      const country = document.getElementById('trackCountry').value || 'Custom';
+      const raceLaps = parseInt(document.getElementById('raceLaps').value) || 50;
+      
+      // Calculate track length
+      const splinePoints = generateSpline(state.controlPoints);
+      const lengthMeters = calculateTrackLength(splinePoints);
+      
+      // Generate ID from name
+      const id = trackName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      
+      const trackData = {
+        id: id,
+        name: trackName,
+        country: country,
+        lengthMeters: lengthMeters,
+        raceLaps: raceLaps,
+        trackWidth: state.trackWidth,
+        controlPoints: state.controlPoints.map(p => ({
+          x: Math.round(p.x),
+          y: Math.round(p.y)
+        })),
+        startFinish: {
+          controlPointIndex: 0
+        }
+      };
+      
+      const json = JSON.stringify(trackData, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${id}.json`;
+      a.click();
+      
+      URL.revokeObjectURL(url);
+    });
+    
+    document.getElementById('importBtn').addEventListener('click', () => {
+      document.getElementById('importFile').click();
+    });
+    
+    document.getElementById('importFile').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const trackData = JSON.parse(event.target.result);
+          
+          // Validate
+          if (!trackData.controlPoints || !Array.isArray(trackData.controlPoints)) {
+            throw new Error('Invalid track data: missing controlPoints array');
+          }
+          
+          // Load data
+          state.controlPoints = trackData.controlPoints.map(p => ({
+            x: p.x,
+            y: p.y
+          }));
+          
+          if (trackData.trackWidth) {
+            state.trackWidth = trackData.trackWidth;
+            document.getElementById('trackWidth').value = state.trackWidth;
+            document.getElementById('widthValue').textContent = state.trackWidth;
+          }
+          
+          if (trackData.name) {
+            document.getElementById('trackName').value = trackData.name;
+          }
+          
+          if (trackData.country) {
+            document.getElementById('trackCountry').value = trackData.country;
+          }
+          
+          if (trackData.raceLaps) {
+            document.getElementById('raceLaps').value = trackData.raceLaps;
+          }
+          
+          // Fit view to track
+          document.getElementById('zoomFit').click();
+          
+          alert(`Loaded track: ${trackData.name || 'Unknown'} with ${state.controlPoints.length} control points`);
+        } catch (err) {
+          alert('Error loading track: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+      
+      // Reset file input
+      e.target.value = '';
+    });
+    
+    // ============================================
+    // INITIALIZATION
+    // ============================================
+    
+    function init() {
+      // Set initial canvas size
+      resizeCanvas();
+      
+      // Initial render
+      render();
+      
+      // Handle window resize
+      window.addEventListener('resize', () => {
+        resizeCanvas();
+        render();
+      });
+    }
+    
+    function resizeCanvas() {
+      const container = canvas.parentElement;
+      const padding = 40;
+      canvas.width = Math.min(1400, container.clientWidth - padding);
+      canvas.height = Math.min(900, container.clientHeight - padding);
+    }
+    
+    // Start the editor
+    init();
+  </script>
+</body>
+</html>
