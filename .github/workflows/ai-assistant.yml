@@ -30,10 +30,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install uv and opencode
-        uses: astral-sh/setup-uv@v4
-      
-      - run: uv tool install opencode-ai
+      - name: Install OpenCode
+        run: |
+          curl -fsSL https://opencode.ai/install | bash
+          mkdir -p /home/runner/.local/share/opencode/project
 
       - name: React with eyes
         env:
