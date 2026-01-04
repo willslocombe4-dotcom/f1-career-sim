@@ -1,10 +1,11 @@
 {
   "id": "brazil",
-  "name": "brazil",
-  "country": "Custom",
+  "name": "Interlagos",
+  "country": "Brazil",
+  "characteristics": "Technical circuit with elevation changes",
   "lengthMeters": 28658,
   "raceLaps": 50,
-  "trackWidth": 40,
+  "trackWidth": 80,
   "controlPoints": [
     {
       "x": -180,
