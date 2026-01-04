@@ -48,7 +48,7 @@ export class TrackRenderer {
    * Render the grass background that covers the entire track area.
    * The infield should be grass, not asphalt.
    */
-  private renderGrassBackground(track: ComputedTrack): Graphics {
+  private _renderGrassBackground(track: ComputedTrack): Graphics {
     const graphics = new Graphics();
     const grassColor = this.options.grassColor!;
     const padding = track.source.trackWidth * 4;
@@ -72,7 +72,7 @@ export class TrackRenderer {
    * Render runoff areas OUTSIDE the track only.
    * This creates strips of gravel/tarmac on the outside of corners.
    */
-  private renderRunoffAreas(track: ComputedTrack): Container {
+  private _renderRunoffAreas(track: ComputedTrack): Container {
     const container = new Container();
     container.label = 'runoff';
 
@@ -291,7 +291,7 @@ export class TrackRenderer {
   /**
    * Render kerbs (red and white striped curbs on corners).
    */
-  private renderKerbs(track: ComputedTrack): Container {
+  private _renderKerbs(track: ComputedTrack): Container {
     const container = new Container();
     container.label = 'kerbs';
 
@@ -361,7 +361,7 @@ export class TrackRenderer {
   /**
    * Render track markings (start/finish line, center line).
    */
-  private renderMarkings(track: ComputedTrack): Container {
+  private _renderMarkings(track: ComputedTrack): Container {
     const container = new Container();
     container.label = 'markings';
 
@@ -469,7 +469,7 @@ export class TrackRenderer {
   /**
    * Render the racing line with speed-based coloring.
    */
-  private renderRacingLine(track: ComputedTrack): Graphics {
+  private _renderRacingLine(track: ComputedTrack): Graphics {
     const graphics = new Graphics();
 
     if (track.racingLine.length < 2) return graphics;

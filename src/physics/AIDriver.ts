@@ -395,14 +395,12 @@ export class AIDriver {
     
     // Different mistakes have different triggers
     let mistakeToTrigger: 'understeer' | 'oversteer' | 'lockup' | 'wheelspin' | null = null;
-    let triggerChance = 0;
     
     // UNDERSTEER - most common in corners when going too fast
     if (inCorner && speedRatio > 0.4) {
       const understeerChance = baseChance * (0.6 + speedRatio) * (1 + cornerTightness * 3) * (0.8 + this.aggressiveness * 0.4);
       if (Math.random() < understeerChance) {
         mistakeToTrigger = 'understeer';
-        triggerChance = understeerChance;
       }
     }
     
@@ -411,7 +409,6 @@ export class AIDriver {
       const oversteerChance = baseChance * 0.7 * (0.5 + speedRatio) * (1 + cornerTightness * 2) * (0.6 + this.aggressiveness * 0.8);
       if (Math.random() < oversteerChance) {
         mistakeToTrigger = 'oversteer';
-        triggerChance = oversteerChance;
       }
     }
     
@@ -420,7 +417,6 @@ export class AIDriver {
       const lockupChance = baseChance * 0.6 * speedRatio * (1 + cornerTightness * 2) * (0.7 + this.aggressiveness * 0.5);
       if (Math.random() < lockupChance) {
         mistakeToTrigger = 'lockup';
-        triggerChance = lockupChance;
       }
     }
     
@@ -429,7 +425,6 @@ export class AIDriver {
       const wheelspinChance = baseChance * 0.5 * (1 - speedRatio) * (0.5 + this.aggressiveness * 1.0);
       if (Math.random() < wheelspinChance) {
         mistakeToTrigger = 'wheelspin';
-        triggerChance = wheelspinChance;
       }
     }
     

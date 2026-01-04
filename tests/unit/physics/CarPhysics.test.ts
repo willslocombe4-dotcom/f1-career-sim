@@ -4,15 +4,14 @@ import { DEFAULT_CAR_CONFIG, createCarState } from '@physics/types';
 import type { InputState } from '@input/types';
 import { DEFAULT_INPUT_STATE } from '@input/types';
 import {
-  updateCarPhysics,
-  applyAcceleration,
-  applySteering,
-  applyDrag,
   isPointInPolygon,
   findNearestPointOnBoundary,
   constrainToTrack,
   checkTrackBoundaryDistance,
-  constrainToTrackByDistance,
+  applyAcceleration,
+  applySteering,
+  applyDrag,
+  updateCarPhysics,
 } from '@physics/CarPhysics';
 import type { Point } from '@tracks/types';
 import { TrackBuilder } from '@tracks/TrackBuilder';
@@ -439,27 +438,3 @@ describe('Track Boundary Collision', () => {
     });
   });
 });
-
-// Helper functions for debugging tests
-function getBounds(points: Point[]): { minX: number; maxX: number; minY: number; maxY: number } {
-  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-  for (const p of points) {
-    minX = Math.min(minX, p.x);
-    maxX = Math.max(maxX, p.x);
-    minY = Math.min(minY, p.y);
-    maxY = Math.max(maxY, p.y);
-  }
-  return { minX, maxX, minY, maxY };
-}
-
-function computePolygonArea(points: Point[]): number {
-  // Shoelace formula - positive for CCW, negative for CW
-  let area = 0;
-  const n = points.length;
-  for (let i = 0; i < n; i++) {
-    const j = (i + 1) % n;
-    area += points[i].x * points[j].y;
-    area -= points[j].x * points[i].y;
-  }
-  return area / 2;
-}
