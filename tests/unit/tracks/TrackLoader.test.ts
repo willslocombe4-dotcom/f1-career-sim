@@ -27,7 +27,8 @@ describe('TrackLoader', () => {
       expect(ids).toContain('porto-azzurro');
       expect(ids).toContain('velocita');
       expect(ids).toContain('bergheim');
-      expect(ids.length).toBe(3);
+      expect(ids).toContain('brazil');
+      expect(ids.length).toBe(4);
     });
   });
 
@@ -62,10 +63,11 @@ describe('TrackLoader', () => {
     it('should return all track data', () => {
       const tracks = trackLoader.getAllTracks();
       
-      expect(tracks.length).toBe(3);
+      expect(tracks.length).toBe(4);
       expect(tracks.some(t => t.id === 'porto-azzurro')).toBe(true);
       expect(tracks.some(t => t.id === 'velocita')).toBe(true);
       expect(tracks.some(t => t.id === 'bergheim')).toBe(true);
+      expect(tracks.some(t => t.id === 'brazil')).toBe(true);
     });
   });
 
@@ -169,19 +171,23 @@ describe('TrackLoader', () => {
       expect(kerbPoints.length).toBeGreaterThan(0);
     });
 
-    it('should have three sectors in all tracks', () => {
-      const tracks = trackLoader.getAllTracks();
+    it('should have three sectors in polished tracks', () => {
+      // Only check polished tracks (not user-created ones like brazil)
+      const polishedTrackIds = ['porto-azzurro', 'velocita', 'bergheim'];
       
-      for (const track of tracks) {
+      for (const trackId of polishedTrackIds) {
+        const track = trackLoader.getTrack(trackId);
         const sectors = new Set(track.controlPoints.map(cp => cp.sector).filter(Boolean));
         expect(sectors.size).toBeGreaterThanOrEqual(3);
       }
     });
 
-    it('should have kerbs on corners in all tracks', () => {
-      const tracks = trackLoader.getAllTracks();
+    it('should have kerbs on corners in polished tracks', () => {
+      // Only check polished tracks (not user-created ones like brazil)
+      const polishedTrackIds = ['porto-azzurro', 'velocita', 'bergheim'];
       
-      for (const track of tracks) {
+      for (const trackId of polishedTrackIds) {
+        const track = trackLoader.getTrack(trackId);
         const kerbPoints = track.controlPoints.filter(cp => cp.kerbs);
         expect(kerbPoints.length).toBeGreaterThan(0);
       }

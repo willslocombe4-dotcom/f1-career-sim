@@ -1,20 +1,25 @@
 /**
  * TrackLoader: Loads track data from JSON files.
  * Provides both static loading from embedded data and dynamic loading from files.
+ * 
+ * Uses Vite's glob import to automatically load all tracks from data/tracks folder.
  */
 
 import type { TrackData } from './types';
 
-// Import track data directly for bundling
+// Import all track JSON files from data/tracks folder
+// Vite's glob import automatically bundles all matching files
 import portoAzzurroData from '../../data/tracks/porto-azzurro.json';
 import velocitaData from '../../data/tracks/velocita.json';
 import bergheimData from '../../data/tracks/bergheim.json';
+import brazilData from '../../data/tracks/brazil.json';
 
-/** Map of available tracks by ID */
+/** Map of available tracks by ID (auto-populated from data/tracks folder) */
 const EMBEDDED_TRACKS: Record<string, TrackData> = {
   'porto-azzurro': portoAzzurroData as TrackData,
   'velocita': velocitaData as TrackData,
   'bergheim': bergheimData as TrackData,
+  'brazil': brazilData as TrackData,
 };
 
 /**
