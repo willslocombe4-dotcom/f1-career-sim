@@ -185,7 +185,7 @@ npm run test:coverage
 **New to open source? Start here!**
 
 ### 1. Find Something to Work On
-Check out our [**Good First Issues**](https://github.com/willslocombe4-dotcom/f1-career-sim/labels/good%20first%20issue) - these are easy tasks perfect for beginners!
+Check the [**Issues**](https://github.com/willslocombe4-dotcom/f1-career-sim/issues) tab or the [Roadmap](#roadmap) above for ideas!
 
 ### 2. Set Up the Project
 ```bash
