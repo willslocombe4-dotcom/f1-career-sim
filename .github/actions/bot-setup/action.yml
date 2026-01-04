@@ -57,9 +57,9 @@ runs:
 
         mkdir -p ~/.config/opencode
 
-        # --- INPUTS ---
-        MAIN_MODEL="${{ inputs.opencode-model }}"
-        FAST_MODEL="${{ inputs.opencode-fast-model }}"
+        # --- INPUTS (trim whitespace from model names) ---
+        MAIN_MODEL=$(echo "${{ inputs.opencode-model }}" | xargs)
+        FAST_MODEL=$(echo "${{ inputs.opencode-fast-model }}" | xargs)
         DEFAULT_API_KEY="${{ inputs.opencode-api-key }}"
 
         # Use command substitution with a heredoc to safely read the input into a variable.
