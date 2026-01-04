@@ -27,3 +27,13 @@ npm-debug.log*
 
 # Windows artifacts
 nul
+
+# AI assistant files
+thoughts/
+PROJECT_CONTEXT.md
+AI_QUICK_START.md
+ARCHITECTURE.md
+CODE_STYLE.md
+.opencode/
+.claude/
+*.ai.md
