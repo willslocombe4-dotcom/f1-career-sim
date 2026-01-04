@@ -120,6 +120,14 @@ export interface TrackPathPoint {
 }
 
 /**
+ * Racing line strategy type.
+ * - optimal: Standard fastest line, cuts corners
+ * - overtaking: Wider entry, late apex for better exit speed
+ * - defensive: Inside line, blocks overtaking attempts
+ */
+export type RacingLineType = 'optimal' | 'overtaking' | 'defensive';
+
+/**
  * Racing line point - the optimal path around the track.
  */
 export interface RacingLinePoint {
@@ -154,8 +162,11 @@ export interface ComputedTrack {
   /** Track centerline path points */
   path: TrackPathPoint[];
   
-  /** Racing line points */
+  /** Racing line points (default optimal line, for backward compat) */
   racingLine: RacingLinePoint[];
+  
+  /** All racing line variants by type */
+  racingLines: Record<RacingLineType, RacingLinePoint[]>;
   
   /** Track boundary points (outer edge) */
   outerBoundary: Point[];
