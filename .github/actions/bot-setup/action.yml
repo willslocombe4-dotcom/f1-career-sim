@@ -115,26 +115,23 @@ runs:
             
             CONFIG=$(jq --arg key "$config_key" --arg val "$model_string" '.[$key] = $val' <<< "$CONFIG")
             
-            echo "Setting default API key for provider."
-            CONFIG=$(jq \
-              --arg provider "$provider" \
-              --arg apiKey "$DEFAULT_API_KEY" \
-              '.provider[$provider].options.apiKey = $apiKey' <<< "$CONFIG")
-
-            # Special handling for OpenCode Zen provider - needs base URL
+            # Special handling for OpenCode Zen provider - it's built-in, skip all configuration
             if [[ "$provider" == "opencode" ]]; then
-              echo "OpenCode Zen provider detected. Setting base URL."
+              echo "OpenCode Zen provider detected. Using built-in configuration (no manual setup needed)."
+            else
+              echo "Setting default API key for provider."
               CONFIG=$(jq \
                 --arg provider "$provider" \
-                '.provider[$provider].options.baseURL = "https://opencode.ai"' <<< "$CONFIG")
-            fi
+                --arg apiKey "$DEFAULT_API_KEY" \
+                '.provider[$provider].options.apiKey = $apiKey' <<< "$CONFIG")
 
-            if [[ "$config_key" == "model" && "$ADD_REASONING_EFFORT" == "true" ]]; then
-              echo "Reasoning effort toggle is ON. Applying to standard provider model."
-              CONFIG=$(jq \
-                --arg provider "$provider" \
-                --arg modelName "$model_name" \
-                '.provider[$provider].models[$modelName].options.reasoningEffort = "high"' <<< "$CONFIG")
+              if [[ "$config_key" == "model" && "$ADD_REASONING_EFFORT" == "true" ]]; then
+                echo "Reasoning effort toggle is ON. Applying to standard provider model."
+                CONFIG=$(jq \
+                  --arg provider "$provider" \
+                  --arg modelName "$model_name" \
+                  '.provider[$provider].models[$modelName].options.reasoningEffort = "high"' <<< "$CONFIG")
+              fi
             fi
           fi
         }
