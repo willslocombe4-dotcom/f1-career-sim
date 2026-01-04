@@ -30,6 +30,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install uv and opencode
+        uses: astral-sh/setup-uv@v4
+      
+      - run: uv tool install opencode-ai
+
       - name: React with eyes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -40,79 +45,77 @@ jobs:
             gh api --method POST /repos/${{ github.repository }}/issues/${{ env.NUMBER }}/reactions -f content='eyes' || true
           fi
 
-      - name: AI Review PR
-        if: github.event_name == 'pull_request'
+      - name: Configure OpenCode
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           API_KEY: ${{ secrets.API }}
         run: |
-          DIFF=$(gh pr diff ${{ env.NUMBER }} 2>/dev/null | head -300 || echo "No diff available")
-          
-          PROMPT="Review this PR for the f1-career-sim game (TypeScript/PixiJS).
-
-          PR #${{ env.NUMBER }}: ${{ github.event.pull_request.title }}
-          Author: ${{ github.event.pull_request.user.login }}
-
-          Changes:
-          $DIFF
-
-          Give a brief code review (under 800 chars). Note any bugs, issues, or suggestions."
-
-          RESPONSE=$(curl -s -X POST "https://api.opencode.ai/v1/chat/completions" \
-            -H "Authorization: Bearer $API_KEY" \
-            -H "Content-Type: application/json" \
-            -d "$(jq -n --arg p "$PROMPT" '{model:"Claude Haiku 4.5",messages:[{role:"user",content:$p}],max_tokens:800}')" \
-            | jq -r '.choices[0].message.content // "Error calling AI"')
-
-          gh pr review ${{ env.NUMBER }} --comment --body "$RESPONSE"
+          mkdir -p ~/.config/opencode
+          cat > ~/.config/opencode/opencode.json << EOF
+          {
+            "provider": {
+              "zen": {
+                "api": "https://api.opencode.ai/v1",
+                "options": {"apiKey": "$API_KEY"},
+                "models": {
+                  "haiku": {"id": "Claude Haiku 4.5", "name": "Claude Haiku 4.5"}
+                }
+              }
+            },
+            "model": "zen/haiku"
+          }
+          EOF
 
       - name: AI Analyze Issue
         if: github.event_name == 'issues'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          API_KEY: ${{ secrets.API }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          PROMPT="Analyze this issue for the f1-career-sim game (TypeScript/PixiJS F1 racing simulation).
+          PROMPT="You are helping with Issue #${{ env.NUMBER }} on the f1-career-sim project (TypeScript/PixiJS F1 racing game).
 
-          Issue #${{ env.NUMBER }}: ${{ github.event.issue.title }}
+          Title: ${{ github.event.issue.title }}
           Author: ${{ github.event.issue.user.login }}
           Body: ${{ github.event.issue.body }}
 
-          Provide helpful analysis (under 800 chars). If bug, suggest causes. If feature, suggest approach."
-
-          # Build JSON payload
-          PAYLOAD=$(jq -n --arg p "$PROMPT" '{model:"Claude Haiku 4.5",messages:[{role:"user",content:$p}],max_tokens:800}')
+          Briefly analyze this issue (under 500 chars). Then post your response using:
+          gh issue comment ${{ env.NUMBER }} --body 'YOUR_RESPONSE'
           
-          # Call API and capture full response
-          API_RESPONSE=$(curl -s -X POST "https://api.opencode.ai/v1/chat/completions" \
-            -H "Authorization: Bearer $API_KEY" \
-            -H "Content-Type: application/json" \
-            -d "$PAYLOAD")
-          
-          echo "API Response: $API_RESPONSE"
-          
-          # Extract message or error
-          RESPONSE=$(echo "$API_RESPONSE" | jq -r '.choices[0].message.content // .error.message // .error // "Error: Could not parse response"')
+          Keep it short and helpful."
 
-          gh issue comment ${{ env.NUMBER }} --body "$RESPONSE"
+          echo "$PROMPT" | timeout 120 opencode run - || echo "OpenCode timed out or failed"
 
-      - name: AI Reply to Comment
+      - name: AI Review PR
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          DIFF=$(gh pr diff ${{ env.NUMBER }} 2>/dev/null | head -200 || echo "No diff")
+          
+          PROMPT="Review PR #${{ env.NUMBER }} on f1-career-sim (TypeScript/PixiJS game).
+
+          Title: ${{ github.event.pull_request.title }}
+          Author: ${{ github.event.pull_request.user.login }}
+          
+          Changes (first 200 lines):
+          $DIFF
+
+          Give brief feedback (under 500 chars). Post using:
+          gh pr review ${{ env.NUMBER }} --comment --body 'YOUR_REVIEW'"
+
+          echo "$PROMPT" | timeout 120 opencode run - || echo "OpenCode timed out or failed"
+
+      - name: AI Reply
         if: github.event_name == 'issue_comment'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          API_KEY: ${{ secrets.API }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          PROMPT="Reply to this comment on f1-career-sim (TypeScript/PixiJS F1 racing game).
+          PROMPT="Reply to comment on Issue/PR #${{ env.NUMBER }} (f1-career-sim project).
 
-          Issue/PR #${{ env.NUMBER }}: ${{ github.event.issue.title }}
           User ${{ github.event.comment.user.login }} said: ${{ github.event.comment.body }}
 
-          Give a helpful response (under 800 chars)."
+          Give brief helpful response (under 500 chars). Post using:
+          gh issue comment ${{ env.NUMBER }} --body 'YOUR_RESPONSE'"
 
-          RESPONSE=$(curl -s -X POST "https://api.opencode.ai/v1/chat/completions" \
-            -H "Authorization: Bearer $API_KEY" \
-            -H "Content-Type: application/json" \
-            -d "$(jq -n --arg p "$PROMPT" '{model:"Claude Haiku 4.5",messages:[{role:"user",content:$p}],max_tokens:800}')" \
-            | jq -r '.choices[0].message.content // "Error calling AI"')
-
-          gh issue comment ${{ env.NUMBER }} --body "$RESPONSE"
+          echo "$PROMPT" | timeout 120 opencode run - || echo "OpenCode timed out or failed"
