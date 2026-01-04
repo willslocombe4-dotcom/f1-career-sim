@@ -2,7 +2,7 @@ import type { Plugin, GameContext } from '@core/types';
 import type { CarState, CarConfig } from './types';
 import type { Point } from '@tracks/types';
 import { createCarState, DEFAULT_CAR_CONFIG } from './types';
-import { updateCarPhysics, constrainToTrackByDistance } from './CarPhysics';
+import { updateCarPhysics, constrainToTrackByDistance, resolveAllCarCollisions } from './CarPhysics';
 import type { InputState } from '@input/types';
 import { DEFAULT_INPUT_STATE } from '@input/types';
 
@@ -64,6 +64,11 @@ export class PhysicsPlugin implements Plugin {
       }
       
       this.cars.set(carId, newState);
+    }
+
+    // Resolve car-to-car collisions
+    if (this.cars.size > 1) {
+      resolveAllCarCollisions(this.cars, this.carConfigs, DEFAULT_CAR_CONFIG);
     }
 
     // Store player car state in game state for other systems

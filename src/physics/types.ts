@@ -67,20 +67,26 @@ export interface CarConfig {
   driftThreshold: number;
   /** How quickly the car slides when drifting */
   driftFactor: number;
+  /** Car length (front to back) for collision */
+  length: number;
+  /** Car width (side to side) for collision */
+  width: number;
 }
 
 /** Default arcade-style car configuration */
 export const DEFAULT_CAR_CONFIG: CarConfig = {
-  maxSpeed: 180,           // Reasonable top speed
-  acceleration: 120,       // Moderate acceleration
-  braking: 200,            // Strong brakes
-  drag: 30,                // Gentle slowdown when coasting
-  turnSpeed: 3.0,          // Responsive turning
-  turnSpeedFalloff: 0.4,   // Turning gets harder at high speed
+  maxSpeed: 360,           // 2x speed for faster racing
+  acceleration: 240,       // 2x acceleration to match
+  braking: 400,            // 2x braking to match
+  drag: 60,                // 2x drag to match
+  turnSpeed: 4.5,          // Faster turning for high speed (was 3.0)
+  turnSpeedFalloff: 0.2,   // Steering stays responsive at speed (was 0.4)
   minTurnSpeed: 5,         // Low threshold to turn
-  grip: 0.85,              // Good grip, but can drift
-  driftThreshold: 0.7,     // Start drifting at 70% max speed in corners
-  driftFactor: 0.15,       // Gentle drift
+  grip: 0.95,              // Higher grip for better control (was 0.85)
+  driftThreshold: 0.85,    // Higher threshold before drift (was 0.7)
+  driftFactor: 0.08,       // Less slidey when drifting (was 0.15)
+  length: 40,              // Car length for collision
+  width: 20,               // Car width for collision
 };
 
 // ============================================

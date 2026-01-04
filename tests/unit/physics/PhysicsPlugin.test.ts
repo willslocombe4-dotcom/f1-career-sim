@@ -121,10 +121,12 @@ describe('PhysicsPlugin', () => {
       physicsPlugin.setTrackBoundaries(trackPath);
       
       // Register car on track (within width/2 = 25 of centerline at y=100)
-      physicsPlugin.registerCar('onTrack', 100, 110, 0);
+      // Place at x=50 to be far from the off-track car
+      physicsPlugin.registerCar('onTrack', 50, 110, 0);
       
       // Register car off track (more than 25 away from centerline)
-      physicsPlugin.registerCar('offTrack', 100, 150, 0, undefined, true);
+      // Place at x=150 to be far from the on-track car (avoid car-car collision)
+      physicsPlugin.registerCar('offTrack', 150, 150, 0, undefined, true);
       
       // Simulate frame update
       pluginManager.updateAll(1/60);
