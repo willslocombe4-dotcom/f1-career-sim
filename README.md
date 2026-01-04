@@ -2,14 +2,14 @@
 
 <div align="center">
 
-![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
-![PixiJS](https://img.shields.io/badge/PixiJS-FF3366?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0xMiAyTDIgN2wxMCA1IDEwLTV6Ii8+PC9zdmc+&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
-![Tests](https://img.shields.io/badge/Tests-224%20Passing-success?style=for-the-badge)
+[![CI](https://github.com/willslocombe4-dotcom/f1-career-sim/actions/workflows/ci.yml/badge.svg)](https://github.com/willslocombe4-dotcom/f1-career-sim/actions/workflows/ci.yml)
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat-square&logo=typescript&logoColor=white)
+![PixiJS](https://img.shields.io/badge/PixiJS-FF3366?style=flat-square)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat-square&logo=vite&logoColor=white)
 
 **Browser-based F1 driver career simulation with arcade-style racing**
 
-[Features](#features) • [Getting Started](#getting-started) • [Controls](#controls) • [Track Editor](#track-editor) • [Architecture](#architecture)
+[Play](#getting-started) • [Features](#features) • [Contribute](#want-to-contribute) • [Track Editor](#track-editor)
 
 </div>
 
@@ -180,9 +180,36 @@ npm run test:coverage
 
 ---
 
-## Contributing
+## Want to Contribute?
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+**New to open source? Start here!**
+
+### 1. Find Something to Work On
+Check out our [**Good First Issues**](https://github.com/willslocombe4-dotcom/f1-career-sim/labels/good%20first%20issue) - these are easy tasks perfect for beginners!
+
+### 2. Set Up the Project
+```bash
+# Fork this repo (click "Fork" button above)
+# Then clone YOUR fork:
+git clone https://github.com/YOUR_USERNAME/f1-career-sim.git
+cd f1-career-sim
+npm install
+npm run dev
+```
+
+### 3. Make Your Changes
+- Create a new branch: `git checkout -b my-feature`
+- Make your changes
+- Test them: `npm test`
+- Commit: `git commit -m "Add my feature"`
+- Push: `git push origin my-feature`
+
+### 4. Open a Pull Request
+Go to your fork on GitHub and click "New Pull Request". That's it!
+
+> **Questions?** Open an [issue](https://github.com/willslocombe4-dotcom/f1-career-sim/issues) and ask!
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 
 ---
 
