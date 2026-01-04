@@ -1062,3 +1062,4 @@ async function main(): Promise<void> {
 main().catch((error) => {
   console.error('Failed to initialize game:', error);
 });
+// CI test
