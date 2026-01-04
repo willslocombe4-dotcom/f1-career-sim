@@ -80,11 +80,19 @@ jobs:
 
           Provide helpful analysis (under 800 chars). If bug, suggest causes. If feature, suggest approach."
 
-          RESPONSE=$(curl -s -X POST "https://api.opencode.ai/v1/chat/completions" \
+          # Build JSON payload
+          PAYLOAD=$(jq -n --arg p "$PROMPT" '{model:"Claude Haiku 4.5",messages:[{role:"user",content:$p}],max_tokens:800}')
+          
+          # Call API and capture full response
+          API_RESPONSE=$(curl -s -X POST "https://api.opencode.ai/v1/chat/completions" \
             -H "Authorization: Bearer $API_KEY" \
             -H "Content-Type: application/json" \
-            -d "$(jq -n --arg p "$PROMPT" '{model:"Claude Haiku 4.5",messages:[{role:"user",content:$p}],max_tokens:800}')" \
-            | jq -r '.choices[0].message.content // "Error calling AI"')
+            -d "$PAYLOAD")
+          
+          echo "API Response: $API_RESPONSE"
+          
+          # Extract message or error
+          RESPONSE=$(echo "$API_RESPONSE" | jq -r '.choices[0].message.content // .error.message // .error // "Error: Could not parse response"')
 
           gh issue comment ${{ env.NUMBER }} --body "$RESPONSE"
 
