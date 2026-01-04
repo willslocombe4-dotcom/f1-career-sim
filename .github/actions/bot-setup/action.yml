@@ -121,6 +121,14 @@ runs:
               --arg apiKey "$DEFAULT_API_KEY" \
               '.provider[$provider].options.apiKey = $apiKey' <<< "$CONFIG")
 
+            # Special handling for OpenCode Zen provider - needs base URL
+            if [[ "$provider" == "opencode" ]]; then
+              echo "OpenCode Zen provider detected. Setting base URL."
+              CONFIG=$(jq \
+                --arg provider "$provider" \
+                '.provider[$provider].options.baseURL = "https://opencode.ai"' <<< "$CONFIG")
+            fi
+
             if [[ "$config_key" == "model" && "$ADD_REASONING_EFFORT" == "true" ]]; then
               echo "Reasoning effort toggle is ON. Applying to standard provider model."
               CONFIG=$(jq \
