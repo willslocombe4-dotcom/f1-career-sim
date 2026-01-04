@@ -38,7 +38,7 @@ export class LapTimer {
   recordSector(): number | null {
     if (!this.isRunning) return null;
     
-    const sectorTime = Date.now() - this.currentLapStart - this.getTotalSectorTime();
+    const sectorTime = Math.max(0, Date.now() - this.currentLapStart - this.getTotalSectorTime());
     this.sectorTimes.push(sectorTime);
     return sectorTime;
   }
@@ -64,7 +64,7 @@ export class LapTimer {
       sector2: this.sectorTimes[1] ?? null,
       sector3: this.sectorTimes[2] ?? null,
       isValid: lapIsValid,
-      timestamp: new Date()
+      timestamp: new Date(this.currentLapStart)
     };
 
     this.laps.push(lap);

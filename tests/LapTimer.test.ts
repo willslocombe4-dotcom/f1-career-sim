@@ -68,15 +68,25 @@ describe('LapTimer', () => {
     });
 
     it('should record sector times in lap', () => {
+      const mockNow = vi.spyOn(Date, 'now');
+      let time = 0;
+      mockNow.mockImplementation(() => time);
+
+      time = 0;
       timer.startLap();
+      time = 30000;
       timer.recordSector();
+      time = 60000;
       timer.recordSector();
+      time = 90000;
       timer.recordSector();
       const lap = timer.completeLap();
       
-      expect(lap?.sector1).not.toBeNull();
-      expect(lap?.sector2).not.toBeNull();
-      expect(lap?.sector3).not.toBeNull();
+      expect(lap?.sector1).toBe(30000);
+      expect(lap?.sector2).toBe(30000);
+      expect(lap?.sector3).toBe(30000);
+
+      mockNow.mockRestore();
     });
   });
 
