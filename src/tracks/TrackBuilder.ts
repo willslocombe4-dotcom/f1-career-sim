@@ -9,6 +9,7 @@ import type {
   ComputedTrack,
   TrackPathPoint,
   RacingLinePoint,
+  RacingLineType,
   Point,
   KerbData,
 } from './types';
@@ -88,13 +89,21 @@ export class TrackBuilder {
     const innerBoundary = this.computeBoundary(path, 'inner');
     // Use boundaries for accurate kerb placement
     const kerbs = this.computeKerbsWithBoundaries(path, outerBoundary, innerBoundary, trackData.trackWidth);
-    const racingLine = this.computeRacingLine(path);
+    
+    // Compute all racing line variants
+    const racingLines: Record<RacingLineType, RacingLinePoint[]> = {
+      optimal: this.computeRacingLine(path, 'optimal'),
+      overtaking: this.computeRacingLine(path, 'overtaking'),
+      defensive: this.computeRacingLine(path, 'defensive'),
+    };
+    
     const totalLength = this.computeTotalLength(path);
 
     return {
       source: trackData,
       path,
-      racingLine,
+      racingLine: racingLines.optimal, // backward compat
+      racingLines,
       outerBoundary,
       innerBoundary,
       kerbs,
@@ -342,9 +351,13 @@ export class TrackBuilder {
 
 
   /**
-   * Compute the optimal racing line.
+   * Compute a racing line with the specified strategy.
+   * 
+   * - optimal: Standard fastest line, cuts corners for shortest path
+   * - overtaking: Wider entry (outside), late apex for better exit speed
+   * - defensive: Inside line, blocks overtaking attempts, early apex
    */
-  private computeRacingLine(path: TrackPathPoint[]): RacingLinePoint[] {
+  private computeRacingLine(path: TrackPathPoint[], lineType: RacingLineType = 'optimal'): RacingLinePoint[] {
     const racingLine: RacingLinePoint[] = [];
     const n = path.length;
 
@@ -363,13 +376,86 @@ export class TrackBuilder {
       const normalizedAngle = this.normalizeAngle(angleDiff);
       const curvature = Math.abs(normalizedAngle);
 
-      // Speed factor: slower in tight corners
-      const speedFactor = Math.max(0.25, 1 - curvature * 1.5);
-
-      // Offset from center: cut inside on corners
-      const offsetAmount = point.width * 0.35 * Math.min(curvature * 2, 1);
-      const offsetDirection = normalizedAngle > 0 ? -1 : 1;
+      // Base speed factor: slower in tight corners
+      // Aggressive multiplier (3.0) means corners require real braking
+      // Low minimum (0.12) allows hairpins to require near-stop speeds
+      let speedFactor = Math.max(0.12, 1 - curvature * 3.0);
+      
+      // Offset calculation depends on line type
+      let offsetAmount: number;
+      let offsetDirection: number;
       const perpAngle = point.angle + Math.PI / 2;
+      
+      switch (lineType) {
+        case 'optimal':
+          // Standard line: cut inside on corners
+          offsetAmount = point.width * 0.35 * Math.min(curvature * 2, 1);
+          offsetDirection = normalizedAngle > 0 ? -1 : 1;
+          break;
+          
+        case 'overtaking':
+          // Wide entry, late apex: stay outside on corner entry, cut inside late
+          // Look ahead to see if we're approaching a corner
+          const lookAhead = 5;
+          let upcomingCurvature = 0;
+          for (let j = 1; j <= lookAhead; j++) {
+            const futureIdx = (i + j) % n;
+            const futurePrev = path[(futureIdx - 1 + n) % n];
+            const futureCurr = path[futureIdx];
+            const futureNext = path[(futureIdx + 1) % n];
+            const fdx1 = futureCurr.position.x - futurePrev.position.x;
+            const fdy1 = futureCurr.position.y - futurePrev.position.y;
+            const fdx2 = futureNext.position.x - futureCurr.position.x;
+            const fdy2 = futureNext.position.y - futureCurr.position.y;
+            const fAngleDiff = Math.atan2(fdy2, fdx2) - Math.atan2(fdy1, fdx1);
+            upcomingCurvature = Math.max(upcomingCurvature, Math.abs(this.normalizeAngle(fAngleDiff)));
+          }
+          
+          // If corner is upcoming but not yet, stay wide (outside)
+          // If in corner, cut to inside (late apex)
+          if (upcomingCurvature > curvature && curvature < 0.1) {
+            // Approaching corner: stay outside
+            offsetAmount = point.width * 0.3;
+            offsetDirection = normalizedAngle > 0 ? 1 : -1; // opposite of optimal
+          } else {
+            // In corner or straight: similar to optimal but slightly wider
+            offsetAmount = point.width * 0.25 * Math.min(curvature * 2, 1);
+            offsetDirection = normalizedAngle > 0 ? -1 : 1;
+          }
+          // Slightly slower on entry due to wider line
+          speedFactor *= 0.95;
+          break;
+          
+        case 'defensive':
+          // Inside line: hug the inside to block overtakes, early apex
+          // Always offset toward the inside of corners
+          offsetAmount = point.width * 0.4 * Math.min(curvature * 2.5, 1);
+          offsetDirection = normalizedAngle > 0 ? -1 : 1;
+          // On straights, also offset toward likely overtake side (inside of next corner)
+          if (curvature < 0.05) {
+            // Look ahead for next corner direction
+            for (let j = 1; j <= 15; j++) {
+              const futureIdx = (i + j) % n;
+              const futurePrev = path[(futureIdx - 1 + n) % n];
+              const futureCurr = path[futureIdx];
+              const futureNext = path[(futureIdx + 1) % n];
+              const fdx1 = futureCurr.position.x - futurePrev.position.x;
+              const fdy1 = futureCurr.position.y - futurePrev.position.y;
+              const fdx2 = futureNext.position.x - futureCurr.position.x;
+              const fdy2 = futureNext.position.y - futureCurr.position.y;
+              const fAngleDiff = this.normalizeAngle(Math.atan2(fdy2, fdx2) - Math.atan2(fdy1, fdx1));
+              if (Math.abs(fAngleDiff) > 0.1) {
+                // Found upcoming corner, offset toward its inside
+                offsetAmount = point.width * 0.2;
+                offsetDirection = fAngleDiff > 0 ? -1 : 1;
+                break;
+              }
+            }
+          }
+          // Defensive line is slower
+          speedFactor *= 0.9;
+          break;
+      }
 
       racingLine.push({
         position: {

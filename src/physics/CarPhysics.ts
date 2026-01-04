@@ -144,6 +144,54 @@ export function updatePosition(
 }
 
 /**
+ * Apply cornering speed limit.
+ * If turning too fast for the current speed, scrub off speed (simulates tire grip limit).
+ * This makes corners require actual braking.
+ */
+export function applyCorneringLimit(
+  state: CarState,
+  input: InputState,
+  config: CarConfig,
+  dt: number
+): CarState {
+  // Only apply if actually steering
+  const isSteering = input.steerLeft || input.steerRight;
+  if (!isSteering || state.speed < 20) {
+    return state;
+  }
+  
+  // Calculate how hard we're turning relative to speed
+  const speedRatio = state.speed / config.maxSpeed;
+  
+  // Cornering force increases with speed squared
+  // At high speed + hard steering = massive grip demand
+  // If grip demand exceeds available grip, scrub speed
+  
+  // Grip available (0.95 default = very grippy)
+  const availableGrip = config.grip;
+  
+  // Grip required: increases dramatically with speed while turning
+  // speedRatio^2 because centripetal force = mv²/r
+  const gripRequired = speedRatio * speedRatio * 1.2;
+  
+  // If we need more grip than we have, lose speed
+  if (gripRequired > availableGrip) {
+    const gripDeficit = gripRequired - availableGrip;
+    // Speed loss proportional to how much we exceed grip
+    // More aggressive: lose 300-600 units/sec when really pushing
+    const speedLoss = gripDeficit * config.maxSpeed * 1.5 * dt;
+    const newSpeed = state.speed - speedLoss;
+    
+    return {
+      ...state,
+      speed: Math.max(20, newSpeed), // Don't go below 20
+    };
+  }
+  
+  return state;
+}
+
+/**
  * Full physics update for one frame.
  * Combines all physics steps in the correct order.
  */
@@ -159,15 +207,18 @@ export function updateCarPhysics(
   // 2. Apply steering
   newState = applySteering(newState, input, config, dt);
 
-  // 3. Apply drag if not accelerating
+  // 3. Apply cornering speed limit (can't corner flat out at high speed)
+  newState = applyCorneringLimit(newState, input, config, dt);
+
+  // 4. Apply drag if not accelerating
   if (!input.accelerate) {
     newState = applyDrag(newState, config, dt);
   }
 
-  // 4. Update velocity based on speed and rotation
+  // 5. Update velocity based on speed and rotation
   newState = updateVelocity(newState, config);
 
-  // 5. Update position
+  // 6. Update position
   newState = updatePosition(newState, dt);
 
   return newState;
@@ -412,4 +463,163 @@ export function constrainToTrackByDistance(
     velocityX: state.velocityX * 0.5,
     velocityY: state.velocityY * 0.5,
   };
+}
+
+// ============================================
+// Car-to-Car Collision
+// ============================================
+
+/**
+ * Check if two cars are colliding using oriented bounding box approximation.
+ * Uses ellipse-based collision for simplicity (length/2 as semi-major, width/2 as semi-minor).
+ */
+export function checkCarCollision(
+  car1: CarState,
+  car1Config: CarConfig,
+  car2: CarState,
+  car2Config: CarConfig
+): { colliding: boolean; overlap: number; normalX: number; normalY: number } {
+  // Calculate distance between car centers
+  const dx = car2.x - car1.x;
+  const dy = car2.y - car1.y;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+  
+  if (distance === 0) {
+    // Cars at same position, push apart in arbitrary direction
+    return { colliding: true, overlap: 20, normalX: 1, normalY: 0 };
+  }
+  
+  // Use average of length and width for collision radius (simplified)
+  const radius1 = (car1Config.length + car1Config.width) / 4;
+  const radius2 = (car2Config.length + car2Config.width) / 4;
+  const minDistance = radius1 + radius2;
+  
+  if (distance >= minDistance) {
+    return { colliding: false, overlap: 0, normalX: 0, normalY: 0 };
+  }
+  
+  // Collision detected
+  const overlap = minDistance - distance;
+  const normalX = dx / distance;
+  const normalY = dy / distance;
+  
+  return { colliding: true, overlap, normalX, normalY };
+}
+
+/**
+ * Resolve collision between two cars by pushing them apart and adjusting velocities.
+ * Returns updated states for both cars.
+ */
+export function resolveCarCollision(
+  car1: CarState,
+  car1Config: CarConfig,
+  car2: CarState,
+  car2Config: CarConfig
+): { car1: CarState; car2: CarState } {
+  const collision = checkCarCollision(car1, car1Config, car2, car2Config);
+  
+  if (!collision.colliding) {
+    return { car1, car2 };
+  }
+  
+  const { overlap, normalX, normalY } = collision;
+  
+  // Push cars apart (each moves half the overlap distance)
+  const pushDistance = overlap / 2 + 1; // +1 for small buffer
+  
+  const new1X = car1.x - normalX * pushDistance;
+  const new1Y = car1.y - normalY * pushDistance;
+  const new2X = car2.x + normalX * pushDistance;
+  const new2Y = car2.y + normalY * pushDistance;
+  
+  // Calculate relative velocity along collision normal
+  const relVelX = car2.velocityX - car1.velocityX;
+  const relVelY = car2.velocityY - car1.velocityY;
+  const relVelNormal = relVelX * normalX + relVelY * normalY;
+  
+  // Only resolve if cars are moving toward each other
+  if (relVelNormal > 0) {
+    return { car1, car2 };
+  }
+  
+  // Simple elastic-ish collision (arcade style)
+  // Transfer some velocity along collision normal
+  const restitution = 0.3; // Bounciness (0 = no bounce, 1 = full bounce)
+  const impulse = -(1 + restitution) * relVelNormal / 2;
+  
+  const impulseX = impulse * normalX;
+  const impulseY = impulse * normalY;
+  
+  // Apply impulse to velocities
+  const new1VelX = car1.velocityX - impulseX;
+  const new1VelY = car1.velocityY - impulseY;
+  const new2VelX = car2.velocityX + impulseX;
+  const new2VelY = car2.velocityY + impulseY;
+  
+  // Recalculate speeds from new velocities
+  const new1Speed = Math.sqrt(new1VelX * new1VelX + new1VelY * new1VelY);
+  const new2Speed = Math.sqrt(new2VelX * new2VelX + new2VelY * new2VelY);
+  
+  // Cap speeds to max
+  const capped1Speed = Math.min(new1Speed, car1Config.maxSpeed);
+  const capped2Speed = Math.min(new2Speed, car2Config.maxSpeed);
+  
+  // Scale velocities if speed was capped
+  const scale1 = new1Speed > 0 ? capped1Speed / new1Speed : 1;
+  const scale2 = new2Speed > 0 ? capped2Speed / new2Speed : 1;
+  
+  return {
+    car1: {
+      ...car1,
+      x: new1X,
+      y: new1Y,
+      velocityX: new1VelX * scale1,
+      velocityY: new1VelY * scale1,
+      speed: capped1Speed,
+    },
+    car2: {
+      ...car2,
+      x: new2X,
+      y: new2Y,
+      velocityX: new2VelX * scale2,
+      velocityY: new2VelY * scale2,
+      speed: capped2Speed,
+    },
+  };
+}
+
+/**
+ * Resolve all car-to-car collisions in a list of cars.
+ * Modifies states in place for efficiency.
+ */
+export function resolveAllCarCollisions(
+  carStates: Map<string, CarState>,
+  carConfigs: Map<string, CarConfig>,
+  defaultConfig: CarConfig
+): void {
+  const carIds = Array.from(carStates.keys());
+  const n = carIds.length;
+  
+  // Check all pairs
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      const id1 = carIds[i];
+      const id2 = carIds[j];
+      
+      const car1 = carStates.get(id1)!;
+      const car2 = carStates.get(id2)!;
+      const config1 = carConfigs.get(id1) ?? defaultConfig;
+      const config2 = carConfigs.get(id2) ?? defaultConfig;
+      
+      const result = resolveCarCollision(car1, config1, car2, config2);
+      
+      // Update states if collision occurred
+      if (result.car1 !== car1) {
+        carStates.set(id1, result.car1);
+      }
+      if (result.car2 !== car2) {
+        carStates.set(id2, result.car2);
+      }
+    }
+  }
 }
