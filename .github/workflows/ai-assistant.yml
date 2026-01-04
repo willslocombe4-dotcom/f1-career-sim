@@ -50,15 +50,27 @@ jobs:
           API_KEY: ${{ secrets.API }}
         run: |
           mkdir -p ~/.config/opencode
-          # Set API key via environment variable (how OpenCode Zen expects it)
-          echo "OPENCODE_API_KEY=$API_KEY" >> $GITHUB_ENV
+          cat > ~/.config/opencode/opencode.json << 'EOF'
+          {
+            "$schema": "https://opencode.ai/config.json",
+            "provider": {
+              "anthropic": {
+                "options": {
+                  "apiKey": "{env:OPENCODE_ZEN_KEY}"
+                }
+              }
+            },
+            "model": "anthropic/claude-3-5-haiku-20241022"
+          }
+          EOF
+          echo "OPENCODE_ZEN_KEY=$API_KEY" >> $GITHUB_ENV
 
       - name: AI Analyze Issue
         if: github.event_name == 'issues'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OPENCODE_API_KEY: ${{ secrets.API }}
+          OPENCODE_ZEN_KEY: ${{ secrets.API }}
         run: |
           PROMPT="Analyze Issue #${{ env.NUMBER }}: ${{ github.event.issue.title }}
 
@@ -67,7 +79,7 @@ jobs:
           Post a brief helpful response (under 300 chars) using:
           gh issue comment ${{ env.NUMBER }} --body 'YOUR_RESPONSE'"
 
-          echo "$PROMPT" | timeout 180 opencode run - || echo "OpenCode timed out"
+          echo "$PROMPT" | timeout 60 opencode run - || echo "OpenCode timed out"
 
       - name: AI Review PR
         if: github.event_name == 'pull_request'
