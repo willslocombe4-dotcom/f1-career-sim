@@ -7,7 +7,7 @@
 ![PixiJS](https://img.shields.io/badge/PixiJS-FF3366?style=flat-square)
 ![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat-square&logo=vite&logoColor=white)
 
-**Browser-based F1 driver career simulation with arcade-style racing**
+**Browser-based F1 racing game with arcade-style physics**
 
 [Play](#getting-started) • [Features](#features) • [Contribute](#want-to-contribute) • [Track Editor](#track-editor)
 
@@ -17,16 +17,15 @@
 
 ## About
 
-Start as a rookie driver at a backmarker team and work your way to championship glory. Race on custom circuits, battle AI opponents, and build your reputation in this arcade-style F1 career game.
+Race against AI opponents on custom circuits in this arcade-style F1 game. Pick a track, race 5 laps, and try to finish first!
 
 ### Features
 
-- **Arcade Racing** - Fun, accessible racing physics with realistic AI mistakes
-- **Career Mode** - Progress from rookie to champion across multiple seasons
-- **4 Unique Circuits** - Including Porto Azzurro (Monaco-style), Velocita (Monza-style), Bergheim (Spa-style), and Interlagos
+- **Arcade Racing** - Fun, accessible physics with car collisions
+- **5 AI Opponents** - Each with different skill levels and realistic mistakes (understeer, oversteer, lock-ups, wheelspin)
+- **4 Tracks** - Porto Azzurro (Monaco-style), Velocita (Monza-style), Bergheim (Spa-style), and Interlagos
 - **Track Editor** - Create your own circuits with reference image tracing
-- **AI Drivers** - 5 AI opponents with different driving styles and skill levels
-- **Race System** - 5-lap races with lap counting, positions, and finish screens
+- **Race System** - 5-lap races with lap counter and finish standings
 
 ---
 
@@ -165,18 +164,25 @@ npm run test:coverage
 
 ## Roadmap
 
+**Done:**
 - [x] Core engine (EventBus, StateManager, Plugins)
 - [x] PixiJS rendering with camera system
 - [x] Track system with Catmull-Rom splines
 - [x] Track editor with reference images
 - [x] Player input and car physics
-- [x] AI drivers with mistakes and overtaking
-- [x] Race system with lap counting
-- [ ] Damage system
+- [x] AI drivers with mistakes
+- [x] Car-to-car collisions
+- [x] Race system (5 laps, standings)
+- [x] Track selection menu
+- [x] 4 playable tracks
+
+**To Do:**
 - [ ] Career mode (contracts, reputation, seasons)
+- [ ] Damage system
+- [ ] Sound effects
 - [ ] Save/Load system
 - [ ] More tracks
-- [ ] UI polish and menus
+- [ ] UI polish
 
 ---
 
