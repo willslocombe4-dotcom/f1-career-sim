@@ -1,0 +1,110 @@
+name: AI Assistant
+
+on:
+  issues:
+    types: [opened]
+  pull_request:
+    types: [opened, synchronize]
+  issue_comment:
+    types: [created]
+
+jobs:
+  ai-respond:
+    if: |
+      github.event_name == 'issues' ||
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@ai'))
+    
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    
+    env:
+      NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: React with eyes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "${{ github.event_name }}" == "issue_comment" ]; then
+            gh api --method POST /repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions -f content='eyes' || true
+          elif [ "${{ github.event_name }}" == "issues" ]; then
+            gh api --method POST /repos/${{ github.repository }}/issues/${{ env.NUMBER }}/reactions -f content='eyes' || true
+          fi
+
+      - name: AI Review PR
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          API_KEY: ${{ secrets.API }}
+        run: |
+          DIFF=$(gh pr diff ${{ env.NUMBER }} 2>/dev/null | head -300 || echo "No diff available")
+          
+          PROMPT="Review this PR for the f1-career-sim game (TypeScript/PixiJS).
+
+          PR #${{ env.NUMBER }}: ${{ github.event.pull_request.title }}
+          Author: ${{ github.event.pull_request.user.login }}
+
+          Changes:
+          $DIFF
+
+          Give a brief code review (under 800 chars). Note any bugs, issues, or suggestions."
+
+          RESPONSE=$(curl -s -X POST "https://api.opencode.ai/v1/chat/completions" \
+            -H "Authorization: Bearer $API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "$(jq -n --arg p "$PROMPT" '{model:"Claude Haiku 4.5",messages:[{role:"user",content:$p}],max_tokens:800}')" \
+            | jq -r '.choices[0].message.content // "Error calling AI"')
+
+          gh pr review ${{ env.NUMBER }} --comment --body "$RESPONSE"
+
+      - name: AI Analyze Issue
+        if: github.event_name == 'issues'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          API_KEY: ${{ secrets.API }}
+        run: |
+          PROMPT="Analyze this issue for the f1-career-sim game (TypeScript/PixiJS F1 racing simulation).
+
+          Issue #${{ env.NUMBER }}: ${{ github.event.issue.title }}
+          Author: ${{ github.event.issue.user.login }}
+          Body: ${{ github.event.issue.body }}
+
+          Provide helpful analysis (under 800 chars). If bug, suggest causes. If feature, suggest approach."
+
+          RESPONSE=$(curl -s -X POST "https://api.opencode.ai/v1/chat/completions" \
+            -H "Authorization: Bearer $API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "$(jq -n --arg p "$PROMPT" '{model:"Claude Haiku 4.5",messages:[{role:"user",content:$p}],max_tokens:800}')" \
+            | jq -r '.choices[0].message.content // "Error calling AI"')
+
+          gh issue comment ${{ env.NUMBER }} --body "$RESPONSE"
+
+      - name: AI Reply to Comment
+        if: github.event_name == 'issue_comment'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          API_KEY: ${{ secrets.API }}
+        run: |
+          PROMPT="Reply to this comment on f1-career-sim (TypeScript/PixiJS F1 racing game).
+
+          Issue/PR #${{ env.NUMBER }}: ${{ github.event.issue.title }}
+          User ${{ github.event.comment.user.login }} said: ${{ github.event.comment.body }}
+
+          Give a helpful response (under 800 chars)."
+
+          RESPONSE=$(curl -s -X POST "https://api.opencode.ai/v1/chat/completions" \
+            -H "Authorization: Bearer $API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "$(jq -n --arg p "$PROMPT" '{model:"Claude Haiku 4.5",messages:[{role:"user",content:$p}],max_tokens:800}')" \
+            | jq -r '.choices[0].message.content // "Error calling AI"')
+
+          gh issue comment ${{ env.NUMBER }} --body "$RESPONSE"
