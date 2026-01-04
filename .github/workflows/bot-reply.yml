@@ -549,6 +549,7 @@ jobs:
       - name: Analyze comment and respond
         env:
           GITHUB_TOKEN: ${{ steps.setup.outputs.token }}
+          OPENCODE_API_KEY: ${{ secrets.API }}
           THREAD_CONTEXT: ${{ env.THREAD_CONTEXT }}
           NEW_COMMENT_AUTHOR: ${{ env.NEW_COMMENT_AUTHOR }}
           NEW_COMMENT_BODY: ${{ env.NEW_COMMENT_BODY }}

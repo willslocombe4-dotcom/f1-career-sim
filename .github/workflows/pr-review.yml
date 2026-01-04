@@ -605,6 +605,7 @@ jobs:
       - name: Review PR with OpenCode
         env:
           GITHUB_TOKEN: ${{ steps.setup.outputs.token }}
+          OPENCODE_API_KEY: ${{ secrets.API }}
           OPENCODE_PERMISSION: |
             {
               "bash": {
