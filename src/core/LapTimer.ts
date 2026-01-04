@@ -5,9 +5,9 @@
 export interface LapTime {
   lapNumber: number;
   time: number; // in milliseconds
-  sector1: number;
-  sector2: number;
-  sector3: number;
+  sector1: number | null;
+  sector2: number | null;
+  sector3: number | null;
   isValid: boolean;
   timestamp: Date;
 }
@@ -15,7 +15,7 @@ export interface LapTime {
 export class LapTimer {
   private laps: LapTime[] = [];
   private currentLapStart: number = 0;
-  private sectorTimes: number[] = [];
+  private sectorTimes: (number | null)[] = [];
   private isRunning: boolean = false;
 
   constructor() {
@@ -33,9 +33,10 @@ export class LapTimer {
 
   /**
    * Record a sector time
+   * @returns The sector time in ms, or null if timer is not running
    */
-  recordSector(): number {
-    if (!this.isRunning) return 0;
+  recordSector(): number | null {
+    if (!this.isRunning) return null;
     
     const sectorTime = Date.now() - this.currentLapStart - this.getTotalSectorTime();
     this.sectorTimes.push(sectorTime);
@@ -44,30 +45,54 @@ export class LapTimer {
 
   /**
    * Complete the current lap and record it
+   * @param isValid - Whether the lap should be marked valid (will be auto-invalidated if sectors missing)
+   * @returns The completed lap, or null if timer is not running
    */
   completeLap(isValid: boolean = true): LapTime | null {
     if (!this.isRunning) return null;
 
     const totalTime = Date.now() - this.currentLapStart;
     
-    // Ensure we have 3 sectors
-    while (this.sectorTimes.length < 3) {
-      this.sectorTimes.push(0);
-    }
+    // Check if all 3 sectors were recorded - auto-invalidate if not
+    const hasAllSectors = this.sectorTimes.length === 3;
+    const lapIsValid = isValid && hasAllSectors;
 
     const lap: LapTime = {
       lapNumber: this.laps.length + 1,
       time: totalTime,
-      sector1: this.sectorTimes[0],
-      sector2: this.sectorTimes[1],
-      sector3: this.sectorTimes[2],
-      isValid,
+      sector1: this.sectorTimes[0] ?? null,
+      sector2: this.sectorTimes[1] ?? null,
+      sector3: this.sectorTimes[2] ?? null,
+      isValid: lapIsValid,
       timestamp: new Date()
     };
 
     this.laps.push(lap);
     this.isRunning = false;
     return lap;
+  }
+
+  /**
+   * Get the current lap time while timing is in progress
+   * @returns Current elapsed time in ms, or null if not running
+   */
+  getCurrentLapTime(): number | null {
+    if (!this.isRunning) return null;
+    return Date.now() - this.currentLapStart;
+  }
+
+  /**
+   * Check if timer is currently running
+   */
+  isTimerRunning(): boolean {
+    return this.isRunning;
+  }
+
+  /**
+   * Get number of sectors recorded in current lap
+   */
+  getCurrentSectorCount(): number {
+    return this.sectorTimes.length;
   }
 
   /**
@@ -129,6 +154,6 @@ export class LapTimer {
   }
 
   private getTotalSectorTime(): number {
-    return this.sectorTimes.reduce((sum, time) => sum + time, 0);
+    return this.sectorTimes.reduce((sum: number, time) => sum + (time ?? 0), 0);
   }
 }
